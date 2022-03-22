@@ -51,7 +51,6 @@ fi
 if [ $DO_EXPRESS_VPN = "y" ]; then
   echo ""
   echo "Installing expressvpn..."
-  #TODO implement automatic upate for expressvpn
   EXPRESS_VPN_VERSION="expressvpn_3.20.0.5-1_amd64.deb"
   EXPECTED_FINGERPRINT="pub   rsa4096 2016-01-22 [SC]
       1D0B 09AD 6C93 FEE9 3FDD  BD9D AFF2 A141 5F6A 3A38

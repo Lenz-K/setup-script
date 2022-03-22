@@ -1,6 +1,16 @@
 # About
-This repository consists of an interactive script to set up a fresh install of Linux. So far it only supports Ubuntu Linux. Copy the script to your machine and run it:
+This repository consists of an interactive script to set up a fresh install of Linux. So far it only supports Ubuntu Linux.
 
+# Instructions
+Download the script:
+```shell
+wget https://raw.githubusercontent.com/Lenz-K/setup-script/main/setup-script.sh
+```
+Make it executable:
+```shell
+chmod a+x setup-script.sh
+```
+Execute it:
 ```shell
 sudo ./setup-script.sh
 ```
@@ -9,7 +19,7 @@ sudo ./setup-script.sh
 The interactive script will update the system and will then ask to install and set up the following software modules and features:
 
 - automatic updates   
-_Note: ExpressVPN is not automatically updated so far. Find information about updating it in the section Updating ExpressVPN._
+_Note: ExpressVPN is not automatically updated so far. Find information about updating it in the section [Updating ExpressVPN](https://github.com/Lenz-K/setup-script#updating-expressvpn")._
 - git
 - python and pip
 - cryptsetup

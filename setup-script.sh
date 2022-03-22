@@ -25,13 +25,13 @@ if [ $DO_GIT = "y" ]; then
 fi
 
 read -p "Install python and pip? ([y]/n) " DO_PY
-$DO_PY=${DO_PY:-y}
+DO_PY=${DO_PY:-y}
 if [ $DO_PY = "y" ]; then
   MODULES_TO_INSTALL="$MODULES_TO_INSTALL python3 python3-pip"
 fi
 
 read -p "Install cryptsetup? ([y]/n) " DO_CRYPT
-$DO_CRYPT=${DO_CRYPT:-y}
+DO_CRYPT=${DO_CRYPT:-y}
 if [ $DO_CRYPT = "y" ]; then
   MODULES_TO_INSTALL="$MODULES_TO_INSTALL cryptsetup"
 fi
@@ -49,6 +49,7 @@ if ! [[ -z $MODULES_TO_INSTALL ]]; then
 fi
 
 if [ $DO_EXPRESS_VPN = "y" ]; then
+  echo ""
   echo "Installing expressvpn..."
   #TODO implement automatic upate for expressvpn
   EXPRESS_VPN_VERSION="expressvpn_3.20.0.5-1_amd64.deb"
@@ -63,7 +64,7 @@ sub   rsa4096 2016-01-22 [E]"
   gpg --keyserver hkp://keyserver.ubuntu.com --recv-keys 0xAFF2A1415F6A3A38
   KEY_FINGERPRINT=$(gpg --fingerprint release@expressvpn.com)
 
-  if [ $KEY_FINGERPRINT = $EXPECTED_FINGERPRINT ]; then
+  if [ "$KEY_FINGERPRINT" = "$EXPECTED_FINGERPRINT" ]; then
     gpg --verify $EXPRESS_VPN_VERSION.asc
     if [ $? -eq 0 ]; then
       dpkg -i $EXPRESS_VPN_VERSION
@@ -83,7 +84,7 @@ echo "##########################"
 echo "#     Configurations     #"
 echo "##########################"
 if [ $DO_AUTOMATIC_UPDATES = "y" ]; then
-  echo "#\!/bin/bash\napt update\napt -y upgrade" >> /usr/local/bin/update-system.sh
+  echo -e "#!/bin/bash\napt update\napt -y upgrade" >> /usr/local/bin/update-system.sh
   chmod a+x /usr/local/bin/update-system.sh
   echo "0 0 * * * root update-system.sh" >> /etc/cron.d/update-system-crontab
 fi
@@ -131,4 +132,5 @@ if [ $DO_UFW = "y" ]; then
   ufw --force enable
 fi
 
+echo ""
 echo "All done! Let's go!"

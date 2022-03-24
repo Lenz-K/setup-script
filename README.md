@@ -1,5 +1,5 @@
 # About
-This repository consists of an interactive script to set up a fresh install of Linux. So far it only supports Ubuntu Linux.
+This repository consists of an interactive script to easily install basic software modules and configure a freshly installed Linux. So far it only supports Ubuntu Linux.
 
 # Instructions
 Download the script:

@@ -1,6 +1,5 @@
 #!/bin/bash
 
-echo ""
 echo "##########################"
 echo "#     System Updates     #"
 echo "##########################"
@@ -98,8 +97,10 @@ if [ $DO_GIT = "y" ]; then
   read -p "Generate SSH key? ([y]/n) " DO_GENERATE_KEY
   DO_GENERATE_KEY=${DO_GENERATE_KEY:-y}
   if [ $DO_GENERATE_KEY = "y" ]; then
+    read -p "For which user shall the SSH key be generated? [root] " KEY_FOR_USER
+    KEY_FOR_USER=${KEY_FOR_USER:-root}
     echo "Generating SSH key..."
-    ssh-keygen -t ed25519 -C $EMAIL
+    su -c "ssh-keygen -t ed25519 -C $EMAIL" $KEY_FOR_USER
     echo "Instructions to add the SSH key to your GitHub profile can be found here: https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account"
   fi
 fi

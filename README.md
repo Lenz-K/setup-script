@@ -1,5 +1,5 @@
 # About
-This repository consists of an interactive script to easily install basic software modules and configure a freshly installed Linux. So far it only supports Ubuntu Linux.
+This repository consists of an interactive script to easily install basic software modules and configure a freshly installed Linux. So far it supports Ubuntu and Manjaro Linux. ExpressVPN only works on a x86 system.
 
 # Instructions
 Download the script:

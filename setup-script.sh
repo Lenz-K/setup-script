@@ -1,20 +1,45 @@
 #!/bin/bash
 
+# Retrieve system information
+ARCH=$(uname -m)
+if [[ $ARCH == *"x86"* ]]; then
+  ARCH="x86"
+else
+  ARCH="Unsupported"
+  echo "Unsupported processor architecture! Some features of this script are ignored."
+fi
+
+DISTRO=$(cat /etc/issue)
+if [[ $DISTRO == *"Ubuntu"* ]]; then
+  DISTRO="Ubuntu"
+elif [[ $DISTRO == *"Manjaro"* ]] ; then
+  DISTRO="Manjaro"
+else
+  echo "Unsupported Linux distribution!"
+  exit 0
+fi
+
+echo "Detected system: $ARCH architecture - $DISTRO OS"
+echo ""
 echo "##########################"
 echo "#     System Updates     #"
 echo "##########################"
-apt update
-apt -y upgrade
+if [ $DISTRO = "Ubuntu" ]; then
+  apt update
+  apt -y upgrade
+elif [ $DISTRO = "Manjaro" ]; then
+  pacman -Syu --noconfirm
+fi
 
 echo ""
 echo "##########################"
 echo "#       Selections       #"
 echo "##########################"
 
-# String for apt install
+# String for install command
 MODULES_TO_INSTALL=""
 
-read -p "Configure automatic updates? ([y]/n) " DO_AUTOMATIC_UPDATES
+read -p "Configure automatic updates at midnight? ([y]/n) " DO_AUTOMATIC_UPDATES
 DO_AUTOMATIC_UPDATES=${DO_AUTOMATIC_UPDATES:-y}
 
 read -p "Install and setup git? ([y]/n) " DO_GIT
@@ -26,7 +51,11 @@ fi
 read -p "Install python and pip? ([y]/n) " DO_PY
 DO_PY=${DO_PY:-y}
 if [ $DO_PY = "y" ]; then
-  MODULES_TO_INSTALL="$MODULES_TO_INSTALL python3 python3-pip"
+  if [ $DISTRO = "Ubuntu" ]; then
+    MODULES_TO_INSTALL="$MODULES_TO_INSTALL python3 python3-pip"
+  elif [ $DISTRO = "Manjaro" ]; then
+    MODULES_TO_INSTALL="$MODULES_TO_INSTALL python python-pip"
+  fi
 fi
 
 read -p "Install cryptsetup? ([y]/n) " DO_CRYPT
@@ -35,8 +64,19 @@ if [ $DO_CRYPT = "y" ]; then
   MODULES_TO_INSTALL="$MODULES_TO_INSTALL cryptsetup"
 fi
 
-read -p "Install and setup ExpressVPN? ([y]/n) " DO_EXPRESS_VPN
-DO_EXPRESS_VPN=${DO_EXPRESS_VPN:-y}
+if [ $ARCH = "x86" ]; then
+  read -p "Install and setup ExpressVPN? ([y]/n) " DO_EXPRESS_VPN
+  DO_EXPRESS_VPN=${DO_EXPRESS_VPN:-y}
+else
+  DO_EXPRESS_VPN="n"
+fi
+
+
+read -p "Install and setup ufw (Uncomplicated Firewall)? ([y]/n) " DO_UFW
+DO_UFW=${DO_UFW:-y}
+if [ $DO_UFW = "y" ]; then
+  MODULES_TO_INSTALL="$MODULES_TO_INSTALL ufw"
+fi
 
 echo ""
 echo "##########################"
@@ -44,28 +84,51 @@ echo "# Package Installations  #"
 echo "##########################"
 if ! [[ -z $MODULES_TO_INSTALL ]]; then
   echo "Installing the following modules: $MODULES_TO_INSTALL"
-  apt -y install $MODULES_TO_INSTALL
+  if [ $DISTRO = "Ubuntu" ]; then
+    apt -y install $MODULES_TO_INSTALL
+  elif [ $DISTRO = "Manjaro" ]; then
+    pacman -S --noconfirm --needed $MODULES_TO_INSTALL
+  fi
 fi
 
 if [ $DO_EXPRESS_VPN = "y" ]; then
   echo ""
   echo "Installing expressvpn..."
-  EXPRESS_VPN_VERSION="expressvpn_3.20.0.5-1_amd64.deb"
+
+  if [ $DISTRO = "Ubuntu" ]; then
+    EXPRESS_VPN_PACKAGE_TYPE=".deb"
+    EXPRESS_VPN_ARCH="amd64"
+    EXPRESS_VPN_SEPARATOR="_"
+  elif [ $DISTRO = "Manjaro" ]; then
+    EXPRESS_VPN_PACKAGE_TYPE=".pkg.tar.xz"
+    EXPRESS_VPN_ARCH="x86_64"
+    EXPRESS_VPN_SEPARATOR="-"
+  fi
+
+  EXPRESS_VPN_VERSION="3.20.0.5-1"
+  EXPRESS_VPN_FILE="expressvpn${EXPRESS_VPN_SEPARATOR}${EXPRESS_VPN_VERSION}${EXPRESS_VPN_SEPARATOR}${EXPRESS_VPN_ARCH}${EXPRESS_VPN_PACKAGE_TYPE}"
+  EXPRESS_VPN_DOWNLOAD="https://www.expressvpn.works/clients/linux/${EXPRESS_VPN_FILE}"
   EXPECTED_FINGERPRINT="pub   rsa4096 2016-01-22 [SC]
       1D0B 09AD 6C93 FEE9 3FDD  BD9D AFF2 A141 5F6A 3A38
 uid           [ unknown] ExpressVPN Release <release@expressvpn.com>
 sub   rsa4096 2016-01-22 [E]"
 
-  wget https://www.expressvpn.works/clients/linux/$EXPRESS_VPN_VERSION
-  wget https://www.expressvpn.works/clients/linux/$EXPRESS_VPN_VERSION.asc
+  wget $EXPRESS_VPN_DOWNLOAD
+  wget $EXPRESS_VPN_DOWNLOAD.asc
 
   gpg --keyserver hkp://keyserver.ubuntu.com --recv-keys 0xAFF2A1415F6A3A38
   KEY_FINGERPRINT=$(gpg --fingerprint release@expressvpn.com)
 
   if [ "$KEY_FINGERPRINT" = "$EXPECTED_FINGERPRINT" ]; then
-    gpg --verify $EXPRESS_VPN_VERSION.asc
+    gpg --verify $EXPRESS_VPN_FILE.asc
     if [ $? -eq 0 ]; then
-      dpkg -i $EXPRESS_VPN_VERSION
+      if [ $DISTRO = "Ubuntu" ]; then
+        dpkg -i $EXPRESS_VPN_FILE
+      elif [ $DISTRO = "Manjaro" ]; then
+        pacman -U --noconfirm $EXPRESS_VPN_FILE
+      fi
+      rm --force $EXPRESS_VPN_FILE
+      rm --force $EXPRESS_VPN_FILE.asc
     else
       echo "Aborting ExpressVPN installation!"
       DO_EXPRESS_VPN="n"
@@ -82,9 +145,15 @@ echo "##########################"
 echo "#     Configurations     #"
 echo "##########################"
 if [ $DO_AUTOMATIC_UPDATES = "y" ]; then
-  echo -e "#!/bin/bash\napt update\napt -y upgrade" >> /usr/local/bin/update-system.sh
-  chmod a+x /usr/local/bin/update-system.sh
-  echo "0 0 * * * root update-system.sh" >> /etc/cron.d/update-system-crontab
+  if [ $DISTRO = "Ubuntu" ] && [ ! -f /usr/local/bin/update-system ]; then
+    echo -e "#!/bin/bash\napt update\napt -y upgrade" >> /usr/local/bin/update-system
+  elif [ $DISTRO = "Manjaro" ] && [ ! -f /usr/local/bin/update-system ]; then
+    echo -e "#!/bin/bash\npacman -Syu --noconfirm" >> /usr/local/bin/update-system
+  fi
+  chmod a+x /usr/local/bin/update-system
+  if [ ! -f /etc/cron.d/update-system-crontab ]; then
+    echo "0 0 * * * root /usr/local/bin/update-system" >> /etc/cron.d/update-system-crontab
+  fi
 fi
 
 if [ $DO_GIT = "y" ]; then
@@ -105,7 +174,7 @@ if [ $DO_GIT = "y" ]; then
   fi
 fi
 
-if [ $DO_PY = "y" ]; then
+if [ $DO_PY = "y" ] && [ $DISTRO = "Ubuntu" ]; then
   ln -s python3 /usr/bin/python
 fi
 
@@ -114,22 +183,22 @@ if [ $DO_EXPRESS_VPN = "y" ]; then
   expressvpn autoconnect true
   expressvpn preferences set block_trackers true
   expressvpn connect
-  read -p "Install ExpressVPN control add-on for Firefox? ([y]/n) " DO_FIREFOX
-  DO_FIREFOX=${DO_FIREFOX:-y}
-  if [ $DO_FIREFOX = "y" ]; then
-    expressvpn install-firefox-extension
-  fi
 fi
 
-read -p "Enable ufw (Uncomplicated Firewall)? ([y]/n) " DO_UFW
-DO_UFW=${DO_UFW:-y}
 if [ $DO_UFW = "y" ]; then
-  read -p "Allow SSH through firewall? ([y]/n) " DO_SSH
-  DO_SSH=${DO_SSH:-y}
-  if [ $DO_SSH = "y" ]; then
-    ufw allow ssh
+  read -p "Enable ufw (Uncomplicated Firewall)? ([y]/n) " ACTIVATE_UFW
+  ACTIVATE_UFW=${ACTIVATE_UFW:-y}
+  if [ $ACTIVATE_UFW = "y" ]; then
+    read -p "Allow SSH through firewall? ([y]/n) " DO_SSH
+    DO_SSH=${DO_SSH:-y}
+    if [ $DO_SSH = "y" ]; then
+      ufw allow ssh
+    fi
+    if [ $DISTRO = "Manjaro" ]; then
+      systemctl enable ufw
+    fi
+    ufw --force enable
   fi
-  ufw --force enable
 fi
 
 echo ""

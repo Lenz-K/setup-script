@@ -41,6 +41,9 @@ MODULES_TO_INSTALL=""
 
 read -p "Configure automatic updates at midnight? ([y]/n) " DO_AUTOMATIC_UPDATES
 DO_AUTOMATIC_UPDATES=${DO_AUTOMATIC_UPDATES:-y}
+if [ $DO_AUTOMATIC_UPDATES = "y" ] && [ $DISTRO = "Manjaro" ]; then
+  MODULES_TO_INSTALL="$MODULES_TO_INSTALL cronie"
+fi
 
 read -p "Install and setup git? ([y]/n) " DO_GIT
 DO_GIT=${DO_GIT:-y}

@@ -108,14 +108,16 @@ if [ $DO_PY = "y" ] && [ $DISTRO = "Ubuntu" ]; then
 fi
 
 if [ $DO_EXPRESS_VPN = "y" ]; then
-  #git -C /usr/local/sbin clone update-expressvpn.py
+  git -C /usr/local/sbin clone https://github.com/Lenz-K/setup-script.git
+  #TODO: remove before merging into main
+  git -C /usr/local/sbin/setup-script checkout automatic-expressvpn-updates
 
   python update-expressvpn.py $DISTRO
   if [ $? -ne 0 ]; then
     DO_EXPRESS_VPN="n"
   fi
 fi
-
+echo $DO_EXPRESS_VPN
 echo ""
 echo "##########################"
 echo "#     Configurations     #"

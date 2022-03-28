@@ -134,5 +134,4 @@ def main(argv):
     return exit_code
 
 if __name__ == '__main__':
-    sys.exit(-1)
     sys.exit(main(sys.argv[1:]))

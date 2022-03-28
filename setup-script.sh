@@ -136,8 +136,8 @@ if [ $DO_AUTOMATIC_UPDATES = "y" ]; then
   fi
   if [ $DO_EXPRESS_VPN = "y" ]; then
     if [ ! -f /etc/cron.d/update-system-crontab ] || [[ $(cat /etc/cron.d/update-system-crontab) != *"5 0 * * * root python /usr/local/sbin/setup-script/update-expressvpn.py"* ]]; then
-      echo "6 0 * * * root git -C /usr/local/sbin/setup-script pull" >> /etc/cron.d/update-system-crontab
-      echo "5 0 * * * root python /usr/local/sbin/setup-script/update-expressvpn.py ${DISTRO}" >> /etc/cron.d/update-system-crontab
+      echo "5 0 * * * root git -C /usr/local/sbin/setup-script pull" >> /etc/cron.d/update-system-crontab
+      echo "6 0 * * * root python /usr/local/sbin/setup-script/update-expressvpn.py ${DISTRO}" >> /etc/cron.d/update-system-crontab
     fi
   fi
 fi

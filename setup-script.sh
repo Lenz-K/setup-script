@@ -108,16 +108,18 @@ if [ $DO_PY = "y" ] && [ $DISTRO = "Ubuntu" ]; then
 fi
 
 if [ $DO_EXPRESS_VPN = "y" ]; then
-  git -C /usr/local/sbin clone https://github.com/Lenz-K/setup-script.git
-  #TODO: remove before merging into main
-  git -C /usr/local/sbin/setup-script checkout automatic-expressvpn-updates
+  if [ ! -d /usr/local/sbin/setup-script ]; then
+    git -C /usr/local/sbin clone https://github.com/Lenz-K/setup-script.git
+    #TODO: remove before merging into main
+    git -C /usr/local/sbin/setup-script checkout automatic-expressvpn-updates
+  fi
 
-  python update-expressvpn.py $DISTRO
+  python /usr/local/sbin/setup-script/update-expressvpn.py $DISTRO
   if [ $? -ne 0 ]; then
     DO_EXPRESS_VPN="n"
   fi
 fi
-echo $DO_EXPRESS_VPN
+
 echo ""
 echo "##########################"
 echo "#     Configurations     #"
@@ -134,8 +136,8 @@ if [ $DO_AUTOMATIC_UPDATES = "y" ]; then
   fi
   if [ $DO_EXPRESS_VPN = "y" ]; then
     if [ ! -f /etc/cron.d/update-system-crontab ] || [[ $(cat /etc/cron.d/update-system-crontab) != *"5 0 * * * root python /usr/local/sbin/setup-script/update-expressvpn.py"* ]]; then
-      echo "5 0 * * * root python /usr/local/sbin/setup-script/update-expressvpn.py ${DISTRO}" >> /etc/cron.d/update-system-crontab
       echo "6 0 * * * root git -C /usr/local/sbin/setup-script pull" >> /etc/cron.d/update-system-crontab
+      echo "5 0 * * * root python /usr/local/sbin/setup-script/update-expressvpn.py ${DISTRO}" >> /etc/cron.d/update-system-crontab
     fi
   fi
 fi

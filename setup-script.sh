@@ -4,6 +4,9 @@
 ARCH=$(uname -m)
 if [[ $ARCH == *"x86"* ]]; then
   ARCH="x86"
+elif [[ $ARCH == *"aarch64"* ]]; then
+  ARCH="aarch64"
+  echo "ExpressVPN is not supported on arm64 and will be ignored."
 else
   ARCH="Unsupported"
   echo "Unsupported processor architecture! Some features of this script are ignored."
@@ -41,6 +44,9 @@ MODULES_TO_INSTALL=""
 
 read -p "Configure automatic updates at midnight? ([y]/n) " DO_AUTOMATIC_UPDATES
 DO_AUTOMATIC_UPDATES=${DO_AUTOMATIC_UPDATES:-y}
+if [ $DO_AUTOMATIC_UPDATES = "y" ] && [ $DISTRO = "Manjaro" ]; then
+  MODULES_TO_INSTALL="$MODULES_TO_INSTALL cronie"
+fi
 
 read -p "Install and setup git? Required for ExpressVPN. ([y]/n) " DO_GIT
 DO_GIT=${DO_GIT:-y}

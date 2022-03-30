@@ -4,6 +4,9 @@
 ARCH=$(uname -m)
 if [[ $ARCH == *"x86"* ]]; then
   ARCH="x86"
+elif [[ $ARCH == *"aarch64"* ]]; then
+  ARCH="aarch64"
+  echo "ExpressVPN is not supported on arm64 and will be ignored."
 else
   ARCH="Unsupported"
   echo "Unsupported processor architecture! Some features of this script are ignored."

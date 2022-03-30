@@ -48,13 +48,13 @@ if [ $DO_AUTOMATIC_UPDATES = "y" ] && [ $DISTRO = "Manjaro" ]; then
   MODULES_TO_INSTALL="$MODULES_TO_INSTALL cronie"
 fi
 
-read -p "Install and setup git? Required for ExpressVPN. ([y]/n) " DO_GIT
+read -p "Install and setup git? Required for ExpressVPN. Not necessary if already installed. ([y]/n) " DO_GIT
 DO_GIT=${DO_GIT:-y}
 if [ $DO_GIT = "y" ]; then
   MODULES_TO_INSTALL="$MODULES_TO_INSTALL git"
 fi
 
-read -p "Install python? Required for ExpressVPN. ([y]/n) " DO_PY
+read -p "Install python? Required for ExpressVPN. Not necessary if already installed. ([y]/n) " DO_PY
 DO_PY=${DO_PY:-y}
 if [ $DO_PY = "y" ]; then
   if [ $DISTRO = "Ubuntu" ]; then
@@ -64,15 +64,13 @@ if [ $DO_PY = "y" ]; then
   fi
 fi
 
-if [ $DO_PY = "y" ]; then
-  read -p "Install pip? ([y]/n) " DO_PIP
-  DO_PIP=${DO_PIP:-y}
-  if [ $DO_PIP = "y" ]; then
-    if [ $DISTRO = "Ubuntu" ]; then
-      MODULES_TO_INSTALL="$MODULES_TO_INSTALL python3-pip"
-    elif [ $DISTRO = "Manjaro" ]; then
-      MODULES_TO_INSTALL="$MODULES_TO_INSTALL python-pip"
-    fi
+read -p "Install pip? ([y]/n) " DO_PIP
+DO_PIP=${DO_PIP:-y}
+if [ $DO_PIP = "y" ]; then
+  if [ $DISTRO = "Ubuntu" ]; then
+    MODULES_TO_INSTALL="$MODULES_TO_INSTALL python3-pip"
+  elif [ $DISTRO = "Manjaro" ]; then
+    MODULES_TO_INSTALL="$MODULES_TO_INSTALL python-pip"
   fi
 fi
 
@@ -82,7 +80,7 @@ if [ $DO_CRYPT = "y" ]; then
   MODULES_TO_INSTALL="$MODULES_TO_INSTALL cryptsetup"
 fi
 
-if [ $ARCH = "x86" ] && [ $DO_PY = "y" ] && [ $DO_GIT = "y" ]; then
+if [ $ARCH = "x86" ]; then
   read -p "Install and setup ExpressVPN? ([y]/n) " DO_EXPRESS_VPN
   DO_EXPRESS_VPN=${DO_EXPRESS_VPN:-y}
   MODULES_TO_INSTALL="$MODULES_TO_INSTALL wget"

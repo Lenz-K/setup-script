@@ -31,7 +31,8 @@ def retrieve_version():
 def retrieve_latest_version():
     os.system('wget https://www.expressvpn.com/latest#linux')
     if not os.path.isfile('latest'):
-        print('Unable to retrieve current version! Aborting!')
+        print('Unable to retrieve latest version online! Aborting!')
+        print('No internet connection?')
         return -1, None
 
     regex = re.compile('https://www.expressvpn.works/clients/linux/expressvpn_\d+.\d+.\d+.\d+-1_amd64.deb.asc')
@@ -40,17 +41,17 @@ def retrieve_latest_version():
     with open('latest', 'rt') as file:
         text = '\n'.join(file.readlines())
 
+    result = regex.search(text)
     remove_file('latest')
 
-    result = regex.search(text)
     if not result:
-        print('Unable to retrieve current version! Aborting!')
+        print('Unable to retrieve latest version link! Aborting!')
         return -1, None
 
     link = result.group()
     result = VERSION_REGEX.search(link)
     if not result:
-        print('Unable to retrieve current version! Aborting!')
+        print('Unable to retrieve latest version! Aborting!')
         return -1, None
 
     return 0, result.group()

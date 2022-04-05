@@ -5,14 +5,17 @@ import sys
 
 
 NOT_INSTALLED = 'Not installed'
-VERSION_REGEX = re.compile('\d+.\d+.\d+.\d+')
+VERSION_REGEX = re.compile(r'\d+.\d+.\d+.\d+')
+
 
 def execute_command(command_list):
     return subprocess.run(command_list, stdout=subprocess.PIPE).stdout.decode('utf-8')
 
+
 def remove_file(file_name):
     if os.path.isfile(file_name):
         os.remove(file_name)
+
 
 def retrieve_version():
     try:
@@ -28,6 +31,7 @@ def retrieve_version():
     except FileNotFoundError:
         return 0, NOT_INSTALLED
 
+
 def retrieve_latest_version():
     os.system('wget https://www.expressvpn.com/latest#linux')
     if not os.path.isfile('latest'):
@@ -35,7 +39,7 @@ def retrieve_latest_version():
         print('No internet connection?')
         return -1, None
 
-    regex = re.compile('https://www.expressvpn.works/clients/linux/expressvpn_\d+.\d+.\d+.\d+-1_amd64.deb.asc')
+    regex = re.compile(r'https://www.expressvpn.works/clients/linux/expressvpn_\d+.\d+.\d+.\d+-1_amd64.deb.asc')
 
     text = ''
     with open('latest', 'rt') as file:
@@ -56,6 +60,7 @@ def retrieve_latest_version():
 
     return 0, result.group()
 
+
 def version_greater_than(latest_version, version):
     latest_version = latest_version.split('.')
     version = version.split('.')
@@ -68,6 +73,7 @@ def version_greater_than(latest_version, version):
 
     return False
 
+
 def install_expressvpn(version, distro):
     print(f'Installing expressvpn version {version}')
 
@@ -79,6 +85,9 @@ def install_expressvpn(version, distro):
         package_type = '.pkg.tar.xz'
         arch = 'x86_64'
         separator = '-'
+    else:
+        print('Unsupported Linux distribution! Aborting!')
+        return -1
 
     file_name = f'expressvpn{separator}{version}-1{separator}{arch}{package_type}'
     download_link = f'https://www.expressvpn.works/clients/linux/{file_name}'
@@ -113,6 +122,7 @@ sub   rsa4096 2016-01-22 [E]'''
 
     return 0
 
+
 def main(argv):
     if len(argv) < 1:
         print('Linux Distribution (Ubuntu or Manjaro) must be given as first commandline argument!')
@@ -133,6 +143,7 @@ def main(argv):
         exit_code = install_expressvpn(latest_version, distro)
 
     return exit_code
+
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))

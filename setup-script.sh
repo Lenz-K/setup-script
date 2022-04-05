@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [ $EUID -ne 0 ]; then
+  echo "Please run as root"
+  exit 0
+fi
+
 # Retrieve system information
 ARCH=$(uname -m)
 if [[ $ARCH == *"x86"* ]]; then

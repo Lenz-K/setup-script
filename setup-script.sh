@@ -127,8 +127,6 @@ if [ $DO_EXPRESS_VPN = "y" ]; then
   # Clone this repository to get the script that updates ExpressVPN
   if [ ! -d /usr/local/sbin/setup-script ]; then
     git -C /usr/local/sbin clone https://github.com/Lenz-K/setup-script.git
-    #TODO: remove before merging into main
-    git -C /usr/local/sbin/setup-script checkout automatic-expressvpn-updates
   fi
 
   python /usr/local/sbin/setup-script/update-expressvpn.py $DISTRO

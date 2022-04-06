@@ -1,5 +1,5 @@
 # About
-This repository consists of an interactive script to easily install basic software modules and configure a freshly installed Linux. So far it supports Ubuntu and Manjaro Linux. ExpressVPN only works on a x86 system.
+This repository consists of an interactive script to easily install basic software modules and configure a freshly installed Linux. So far it supports Ubuntu and Manjaro Linux. It is tested on x86 and arm64.
 
 # Instructions
 Download the script with wget or copy the [content](https://github.com/Lenz-K/setup-script/blob/main/setup-script.sh) into a file called `setup-script.sh`:
@@ -23,5 +23,6 @@ The interactive script will update the system and will then ask to install and s
 - python and pip
 - cryptsetup
 - cifs-utils
-- ExpressVPN
+- ExpressVPN  
+_Note: ExpressVPN is only supported on x86 systems._
 - ufw (Uncomplicated Firewall)

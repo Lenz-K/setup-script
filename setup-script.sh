@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [ $EUID -ne 0 ]; then
+  echo "Please run as root"
+  exit 0
+fi
+
 # Retrieve system information
 ARCH=$(uname -m)
 if [[ $ARCH == *"x86"* ]]; then
@@ -48,19 +53,29 @@ if [ $DO_AUTOMATIC_UPDATES = "y" ] && [ $DISTRO = "Manjaro" ]; then
   MODULES_TO_INSTALL="$MODULES_TO_INSTALL cronie"
 fi
 
-read -p "Install and setup git? ([y]/n) " DO_GIT
+read -p "Install and setup git? Required for ExpressVPN. Not necessary if already installed. ([y]/n) " DO_GIT
 DO_GIT=${DO_GIT:-y}
 if [ $DO_GIT = "y" ]; then
   MODULES_TO_INSTALL="$MODULES_TO_INSTALL git"
 fi
 
-read -p "Install python and pip? ([y]/n) " DO_PY
+read -p "Install python? Required for ExpressVPN. Not necessary if already installed. ([y]/n) " DO_PY
 DO_PY=${DO_PY:-y}
 if [ $DO_PY = "y" ]; then
   if [ $DISTRO = "Ubuntu" ]; then
-    MODULES_TO_INSTALL="$MODULES_TO_INSTALL python3 python3-pip"
+    MODULES_TO_INSTALL="$MODULES_TO_INSTALL python3"
   elif [ $DISTRO = "Manjaro" ]; then
-    MODULES_TO_INSTALL="$MODULES_TO_INSTALL python python-pip"
+    MODULES_TO_INSTALL="$MODULES_TO_INSTALL python"
+  fi
+fi
+
+read -p "Install pip? ([y]/n) " DO_PIP
+DO_PIP=${DO_PIP:-y}
+if [ $DO_PIP = "y" ]; then
+  if [ $DISTRO = "Ubuntu" ]; then
+    MODULES_TO_INSTALL="$MODULES_TO_INSTALL python3-pip"
+  elif [ $DISTRO = "Manjaro" ]; then
+    MODULES_TO_INSTALL="$MODULES_TO_INSTALL python-pip"
   fi
 fi
 
@@ -70,9 +85,16 @@ if [ $DO_CRYPT = "y" ]; then
   MODULES_TO_INSTALL="$MODULES_TO_INSTALL cryptsetup"
 fi
 
+read -p "Install cifs-utils? Needed to mount SMD network shared directories. ([y]/n) " DO_CIFS
+DO_CIFS=${DO_CIFS:-y}
+if [ $DO_CIFS = "y" ]; then
+  MODULES_TO_INSTALL="$MODULES_TO_INSTALL cifs-utils"
+fi
+
 if [ $ARCH = "x86" ]; then
   read -p "Install and setup ExpressVPN? ([y]/n) " DO_EXPRESS_VPN
   DO_EXPRESS_VPN=${DO_EXPRESS_VPN:-y}
+  MODULES_TO_INSTALL="$MODULES_TO_INSTALL wget"
 else
   DO_EXPRESS_VPN="n"
 fi
@@ -97,51 +119,18 @@ if ! [[ -z $MODULES_TO_INSTALL ]]; then
   fi
 fi
 
-if [ $DO_EXPRESS_VPN = "y" ]; then
-  echo ""
-  echo "Installing expressvpn..."
+if [ $DO_PY = "y" ] && [ $DISTRO = "Ubuntu" ]; then
+  ln --symbolic --force python3 /usr/bin/python
+fi
 
-  if [ $DISTRO = "Ubuntu" ]; then
-    EXPRESS_VPN_PACKAGE_TYPE=".deb"
-    EXPRESS_VPN_ARCH="amd64"
-    EXPRESS_VPN_SEPARATOR="_"
-  elif [ $DISTRO = "Manjaro" ]; then
-    EXPRESS_VPN_PACKAGE_TYPE=".pkg.tar.xz"
-    EXPRESS_VPN_ARCH="x86_64"
-    EXPRESS_VPN_SEPARATOR="-"
+if [ $DO_EXPRESS_VPN = "y" ]; then
+  # Clone this repository to get the script that updates ExpressVPN
+  if [ ! -d /usr/local/sbin/setup-script ]; then
+    git -C /usr/local/sbin clone https://github.com/Lenz-K/setup-script.git
   fi
 
-  EXPRESS_VPN_VERSION="3.20.0.5-1"
-  EXPRESS_VPN_FILE="expressvpn${EXPRESS_VPN_SEPARATOR}${EXPRESS_VPN_VERSION}${EXPRESS_VPN_SEPARATOR}${EXPRESS_VPN_ARCH}${EXPRESS_VPN_PACKAGE_TYPE}"
-  EXPRESS_VPN_DOWNLOAD="https://www.expressvpn.works/clients/linux/${EXPRESS_VPN_FILE}"
-  EXPECTED_FINGERPRINT="pub   rsa4096 2016-01-22 [SC]
-      1D0B 09AD 6C93 FEE9 3FDD  BD9D AFF2 A141 5F6A 3A38
-uid           [ unknown] ExpressVPN Release <release@expressvpn.com>
-sub   rsa4096 2016-01-22 [E]"
-
-  wget $EXPRESS_VPN_DOWNLOAD
-  wget $EXPRESS_VPN_DOWNLOAD.asc
-
-  gpg --keyserver hkp://keyserver.ubuntu.com --recv-keys 0xAFF2A1415F6A3A38
-  KEY_FINGERPRINT=$(gpg --fingerprint release@expressvpn.com)
-
-  if [ "$KEY_FINGERPRINT" = "$EXPECTED_FINGERPRINT" ]; then
-    gpg --verify $EXPRESS_VPN_FILE.asc
-    if [ $? -eq 0 ]; then
-      if [ $DISTRO = "Ubuntu" ]; then
-        dpkg -i $EXPRESS_VPN_FILE
-      elif [ $DISTRO = "Manjaro" ]; then
-        pacman -U --noconfirm $EXPRESS_VPN_FILE
-      fi
-      rm --force $EXPRESS_VPN_FILE
-      rm --force $EXPRESS_VPN_FILE.asc
-    else
-      echo "Aborting ExpressVPN installation!"
-      DO_EXPRESS_VPN="n"
-    fi
-  else
-    echo "The fingerprint of the downloaded ExpressVPN key is not as expected!"
-    echo "Aborting ExpressVPN installation!"
+  python /usr/local/sbin/setup-script/update-expressvpn.py $DISTRO
+  if [ $? -ne 0 ]; then
     DO_EXPRESS_VPN="n"
   fi
 fi
@@ -151,14 +140,20 @@ echo "##########################"
 echo "#     Configurations     #"
 echo "##########################"
 if [ $DO_AUTOMATIC_UPDATES = "y" ]; then
-  if [ $DISTRO = "Ubuntu" ] && [ ! -f /usr/local/bin/update-system ]; then
-    echo -e "#!/bin/bash\napt update\napt -y upgrade" >> /usr/local/bin/update-system
-  elif [ $DISTRO = "Manjaro" ] && [ ! -f /usr/local/bin/update-system ]; then
-    echo -e "#!/bin/bash\npacman -Syu --noconfirm" >> /usr/local/bin/update-system
+  if [ $DISTRO = "Ubuntu" ] && [ ! -f /usr/local/sbin/update-system ]; then
+    echo -e "#!/bin/bash\napt update\napt -y upgrade" >> /usr/local/sbin/update-system
+  elif [ $DISTRO = "Manjaro" ] && [ ! -f /usr/local/sbin/update-system ]; then
+    echo -e "#!/bin/bash\npacman -Syu --noconfirm" >> /usr/local/sbin/update-system
   fi
-  chmod a+x /usr/local/bin/update-system
-  if [ ! -f /etc/cron.d/update-system-crontab ]; then
-    echo "0 0 * * * root /usr/local/bin/update-system" >> /etc/cron.d/update-system-crontab
+  chmod a+x /usr/local/sbin/update-system
+  if [ ! -f /etc/cron.d/update-system-crontab ] || [[ $(cat /etc/cron.d/update-system-crontab) != *"0 0 * * * root /usr/local/sbin/update-system"* ]]; then
+    echo "0 0 * * * root /usr/local/sbin/update-system" >> /etc/cron.d/update-system-crontab
+  fi
+  if [ $DO_EXPRESS_VPN = "y" ]; then
+    if [ ! -f /etc/cron.d/update-system-crontab ] || [[ $(cat /etc/cron.d/update-system-crontab) != *"5 0 * * * root python /usr/local/sbin/setup-script/update-expressvpn.py"* ]]; then
+      echo "5 0 * * * root git -C /usr/local/sbin/setup-script pull" >> /etc/cron.d/update-system-crontab
+      echo "6 0 * * * root python /usr/local/sbin/setup-script/update-expressvpn.py ${DISTRO}" >> /etc/cron.d/update-system-crontab
+    fi
   fi
 fi
 
@@ -178,10 +173,6 @@ if [ $DO_GIT = "y" ]; then
     su -c "ssh-keygen -t ed25519 -C $EMAIL" $KEY_FOR_USER
     echo "Instructions to add the SSH key to your GitHub profile can be found here: https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account"
   fi
-fi
-
-if [ $DO_PY = "y" ] && [ $DISTRO = "Ubuntu" ]; then
-  ln -s python3 /usr/bin/python
 fi
 
 if [ $DO_EXPRESS_VPN = "y" ]; then

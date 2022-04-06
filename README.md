@@ -28,4 +28,4 @@ _Note: Needed to mount SMB network shared directories._
 - ExpressVPN  
 _Note: ExpressVPN is only supported on x86 systems._
 - ufw (Uncomplicated Firewall)
-- Enforce SSH key authentication
+- OpenSSH

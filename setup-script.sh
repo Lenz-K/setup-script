@@ -99,11 +99,20 @@ else
   DO_EXPRESS_VPN="n"
 fi
 
-
 read -p "Install and setup ufw (Uncomplicated Firewall)? ([y]/n) " DO_UFW
 DO_UFW=${DO_UFW:-y}
 if [ $DO_UFW = "y" ]; then
   MODULES_TO_INSTALL="$MODULES_TO_INSTALL ufw"
+fi
+
+read -p "Install and configure openssh? ([y]/n) " DO_SSH
+DO_SSH=${DO_SSH:-y}
+if [ $DO_SSH = "y" ]; then
+  if [ $DISTRO = "Ubuntu" ]; then
+    MODULES_TO_INSTALL="$MODULES_TO_INSTALL openssh-server"
+  elif [ $DISTRO = "Manjaro" ]; then
+    MODULES_TO_INSTALL="$MODULES_TO_INSTALL openssh"
+  fi
 fi
 
 echo ""
@@ -194,9 +203,9 @@ if [ $DO_UFW = "y" ]; then
   read -p "Enable ufw (Uncomplicated Firewall)? ([y]/n) " ACTIVATE_UFW
   ACTIVATE_UFW=${ACTIVATE_UFW:-y}
   if [ $ACTIVATE_UFW = "y" ]; then
-    read -p "Allow SSH through firewall? ([y]/n) " DO_SSH
-    DO_SSH=${DO_SSH:-y}
-    if [ $DO_SSH = "y" ]; then
+    read -p "Allow SSH through firewall? ([y]/n) " ALLOW_SSH
+    ALLOW_SSH=${ALLOW_SSH:-y}
+    if [ $ALLOW_SSH = "y" ]; then
       ufw allow ssh
     fi
     if [ $DISTRO = "Manjaro" ]; then
@@ -206,15 +215,17 @@ if [ $DO_UFW = "y" ]; then
   fi
 fi
 
-echo ""
-echo "Enforce SSH key authentication?"
-echo "That means you must have already copied your SSH key to this machine."
-echo "If not run 'ssh-copy-id username@this_machine' on your machine."
-read -p "Enforce SSH key authentication? ([y]/n) " DO_SSH_AUTH
-DO_SSH_AUTH=${DO_SSH_AUTH:-y}
-if [ $DO_SSH_AUTH = "y" ]; then
-  sed -i "s/#PasswordAuthentication yes/PasswordAuthentication no/" /etc/ssh/sshd_config
-  systemctl restart ssh
+if [ $DO_SSH = "y" ]; then
+  echo ""
+  echo "Enforce SSH key authentication?"
+  echo "That means you must have already copied your SSH key to this machine."
+  echo "If not run 'ssh-copy-id username@this_machine' on your machine."
+  read -p "Enforce SSH key authentication? ([y]/n) " DO_SSH_AUTH
+  DO_SSH_AUTH=${DO_SSH_AUTH:-y}
+  if [ $DO_SSH_AUTH = "y" ]; then
+    sed -i "s/#PasswordAuthentication yes/PasswordAuthentication no/" /etc/ssh/sshd_config
+    systemctl restart sshd.service
+  fi
 fi
 
 echo ""

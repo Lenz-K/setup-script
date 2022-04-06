@@ -22,5 +22,6 @@ The interactive script will update the system and will then ask to install and s
 - git
 - python and pip
 - cryptsetup
+- cifs-utils
 - ExpressVPN
 - ufw (Uncomplicated Firewall)

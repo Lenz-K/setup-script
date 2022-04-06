@@ -85,6 +85,12 @@ if [ $DO_CRYPT = "y" ]; then
   MODULES_TO_INSTALL="$MODULES_TO_INSTALL cryptsetup"
 fi
 
+read -p "Install cifs-utils? Needed to mount SMD network shared directories. ([y]/n) " DO_CIFS
+DO_CIFS=${DO_CIFS:-y}
+if [ $DO_CIFS = "y" ]; then
+  MODULES_TO_INSTALL="$MODULES_TO_INSTALL cifs-utils"
+fi
+
 if [ $ARCH = "x86" ]; then
   read -p "Install and setup ExpressVPN? ([y]/n) " DO_EXPRESS_VPN
   DO_EXPRESS_VPN=${DO_EXPRESS_VPN:-y}
@@ -118,6 +124,7 @@ if [ $DO_PY = "y" ] && [ $DISTRO = "Ubuntu" ]; then
 fi
 
 if [ $DO_EXPRESS_VPN = "y" ]; then
+  # Clone this repository to get the script that updates ExpressVPN
   if [ ! -d /usr/local/sbin/setup-script ]; then
     git -C /usr/local/sbin clone https://github.com/Lenz-K/setup-script.git
     #TODO: remove before merging into main

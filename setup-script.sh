@@ -79,13 +79,13 @@ if [ $DO_PIP = "y" ]; then
   fi
 fi
 
-read -p "Install cryptsetup? ([y]/n) " DO_CRYPT
+read -p "Install cryptsetup? Needed to mount or create encrypted devices. ([y]/n) " DO_CRYPT
 DO_CRYPT=${DO_CRYPT:-y}
 if [ $DO_CRYPT = "y" ]; then
   MODULES_TO_INSTALL="$MODULES_TO_INSTALL cryptsetup"
 fi
 
-read -p "Install cifs-utils? Needed to mount SMD network shared directories. ([y]/n) " DO_CIFS
+read -p "Install cifs-utils? Needed to mount SMB network shared directories. ([y]/n) " DO_CIFS
 DO_CIFS=${DO_CIFS:-y}
 if [ $DO_CIFS = "y" ]; then
   MODULES_TO_INSTALL="$MODULES_TO_INSTALL cifs-utils"
@@ -157,6 +157,14 @@ if [ $DO_AUTOMATIC_UPDATES = "y" ]; then
   fi
 fi
 
+read -p "Add additional user? ([y]/n) " DO_CREATE_USER
+DO_CREATE_USER=${DO_CREATE_USER:-y}
+if [ $DO_GIT = "y" ]; then
+  read -p "Enter the name of the new user: " NEW_USER
+  useradd --create-home $NEW_USER -s /bin/bash
+  passwd $NEW_USER
+fi
+
 if [ $DO_GIT = "y" ]; then
   read -p "Please enter your name for git: " NAME
   git config --global user.name "$NAME"
@@ -196,6 +204,17 @@ if [ $DO_UFW = "y" ]; then
     fi
     ufw --force enable
   fi
+fi
+
+echo ""
+echo "Enforce SSH key authentication?"
+echo "That means you must have already copied your SSH key to this machine."
+echo "If not run 'ssh-copy-id username@this_machine' on your machine."
+read -p "Enforce SSH key authentication? ([y]/n) " DO_SSH_AUTH
+DO_SSH_AUTH=${DO_SSH_AUTH:-y}
+if [ $DO_SSH_AUTH = "y" ]; then
+  sed -i "s/#PasswordAuthentication yes/PasswordAuthentication no/" /etc/ssh/sshd_config
+  systemctl restart ssh
 fi
 
 echo ""

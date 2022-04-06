@@ -16,13 +16,16 @@ sudo ./setup-script.sh
 ```
 
 # Features
-The interactive script will update the system and will then ask to install and set up the following software modules and features:
+The interactive script will update the system and will then ask to install and configure the following software modules and features:
 
 - automatic updates
 - git
 - python and pip
-- cryptsetup
-- cifs-utils
+- cryptsetup  
+_Note: Needed to mount or create encrypted devices._
+- cifs-utils  
+_Note: Needed to mount SMB network shared directories._
 - ExpressVPN  
 _Note: ExpressVPN is only supported on x86 systems._
 - ufw (Uncomplicated Firewall)
+- Enforce SSH key authentication

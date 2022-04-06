@@ -231,6 +231,7 @@ if [ $DO_SSH = "y" ]; then
 
   if [ $DO_SSH_AUTH = "y" ]; then
     sed -i "s/#PasswordAuthentication yes/PasswordAuthentication no/" /etc/ssh/sshd_config
+    sed -i "s/PasswordAuthentication yes/PasswordAuthentication no/" /etc/ssh/sshd_config
     systemctl restart sshd.service
     if [ $DISTRO = "Manjaro" ]; then
       systemctl enable sshd.service

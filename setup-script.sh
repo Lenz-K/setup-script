@@ -222,9 +222,13 @@ if [ $DO_SSH = "y" ]; then
   echo "If not run 'ssh-copy-id username@this_machine' on your machine."
   read -p "Enforce SSH key authentication? ([y]/n) " DO_SSH_AUTH
   DO_SSH_AUTH=${DO_SSH_AUTH:-y}
+
   if [ $DO_SSH_AUTH = "y" ]; then
     sed -i "s/#PasswordAuthentication yes/PasswordAuthentication no/" /etc/ssh/sshd_config
     systemctl restart sshd.service
+    if [ $DISTRO = "Manjaro" ]; then
+      systemctl enable sshd.service
+    fi
   fi
 fi
 

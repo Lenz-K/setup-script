@@ -39,6 +39,12 @@ elif [ $DISTRO = "Manjaro" ]; then
   pacman -Syu --noconfirm
 fi
 
+read -p "Restart now? Recommended if a lot of updates were installed. ([y]/n) " DO_RESTART
+DO_RESTART=${DO_RESTART:-y}
+if [ $DO_RESTART = "y" ]; then
+  reboot
+fi
+
 echo ""
 echo "##########################"
 echo "#       Selections       #"

@@ -200,7 +200,7 @@ fi
 
 read -p "Add additional user? ([y]/n) " DO_CREATE_USER
 DO_CREATE_USER=${DO_CREATE_USER:-y}
-if [ $DO_GIT = "y" ]; then
+if [ $DO_CREATE_USER = "y" ]; then
   read -p "Enter the name of the new user: " NEW_USER
   useradd --create-home $NEW_USER -s /bin/bash
   passwd $NEW_USER

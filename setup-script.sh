@@ -110,7 +110,9 @@ fi
 if [ $ARCH = "x86" ]; then
   read -p "Install and setup ExpressVPN? ([y]/n) " DO_EXPRESS_VPN
   DO_EXPRESS_VPN=${DO_EXPRESS_VPN:-y}
-  MODULES_TO_INSTALL="$MODULES_TO_INSTALL wget"
+  if [ $DO_EXPRESS_VPN = "y" ]; then
+    MODULES_TO_INSTALL="$MODULES_TO_INSTALL wget"
+  fi
 else
   DO_EXPRESS_VPN="n"
 fi

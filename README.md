@@ -18,6 +18,12 @@ Finally, run it:
 ```shell
 sudo ./setup-script.sh
 ```
+Now follow the instructions of the script.
+
+The three commands above can also be run as one command:
+```shell
+wget https://raw.githubusercontent.com/Lenz-K/setup-script/main/setup-script.sh && chmod a+x setup-script.sh && sudo ./setup-script.sh
+```
 
 # Features
 The interactive script will update the system and will then ask to install and configure the following software modules and features:

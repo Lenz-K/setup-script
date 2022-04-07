@@ -162,6 +162,13 @@ if [ $DO_DOCKER = "y" ]; then
     systemctl start docker.service
     systemctl enable docker.service
   fi
+
+  read -p "Add user to group 'docker'? ([y]/n) " DO_ADD_GROUP
+  DO_ADD_GROUP=${DO_ADD_GROUP:-y}
+  if [ $DO_ADD_GROUP = "y" ]; then
+    read -p "Enter the name of the user? " USERNAME
+    usermod -aG docker $USERNAME
+  fi
 fi
 
 if [ $DO_EXPRESS_VPN = "y" ]; then

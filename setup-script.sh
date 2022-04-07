@@ -85,6 +85,16 @@ if [ $DO_PIP = "y" ]; then
   fi
 fi
 
+read -p "Install Docker Engine? ([y]/n) " DO_DOCKER
+DO_DOCKER=${DO_DOCKER:-y}
+if [ $DO_DOCKER = "y" ]; then
+  if [ $DISTRO = "Ubuntu" ]; then
+    MODULES_TO_INSTALL="$MODULES_TO_INSTALL ca-certificates curl gnupg lsb-release"
+  elif [ $DISTRO = "Manjaro" ]; then
+    MODULES_TO_INSTALL="$MODULES_TO_INSTALL docker"
+  fi
+fi
+
 read -p "Install cryptsetup? Needed to mount or create encrypted devices. ([y]/n) " DO_CRYPT
 DO_CRYPT=${DO_CRYPT:-y}
 if [ $DO_CRYPT = "y" ]; then
@@ -136,6 +146,20 @@ fi
 
 if [ $DO_PY = "y" ] && [ $DISTRO = "Ubuntu" ]; then
   ln --symbolic --force python3 /usr/bin/python
+fi
+
+if [ $DO_DOCKER = "y" ]; then
+  if [ $DISTRO = "Ubuntu" ]; then
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu \
+      $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+    apt update
+    apt -y install docker-ce docker-ce-cli containerd.io
+  elif [ $DISTRO = "Manjaro" ]; then
+    systemctl start docker.service
+    systemctl enable docker.service
+  fi
 fi
 
 if [ $DO_EXPRESS_VPN = "y" ]; then

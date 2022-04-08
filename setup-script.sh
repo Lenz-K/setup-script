@@ -74,7 +74,7 @@ check_install () {
   # If the program is not installed
   if [ $1 = "n" ]; then
     # Ask for installation
-    read -p "$2" DO_INSTALL
+    read -p "$2 ([y]/n) " DO_INSTALL
     # Default to "y"
     DO_INSTALL=${DO_INSTALL:-y}
     if [ $DO_INSTALL = "y" ]; then
@@ -93,7 +93,9 @@ check_install () {
 }
 
 check_availabilities () {
-  if [ -f /etc/cron.d/update-system-crontab ]; then
+  if [ -f /etc/cron.d/update-system-crontab ] && \
+     [[ $(cat /etc/cron.d/update-system-crontab) == *"0 0 * * * root /usr/local/sbin/update-system"* ]] && \
+     [[ $(cat /etc/cron.d/update-system-crontab) == *"6 0 * * * root python /usr/local/sbin/setup-script/update-expressvpn.py ${DISTRO}"* ]]; then
     EXISTS_AUTO_UPDATES="y"
   else
     EXISTS_AUTO_UPDATES="n"
@@ -135,27 +137,29 @@ if [ $EXISTS_AUTO_UPDATES = "n"]
       MODULES_TO_INSTALL="$MODULES_TO_INSTALL cronie"
     fi
   fi
+else
+  DO_AUTOMATIC_UPDATES="n"
 fi
 
-check_install $EXISTS_GIT "Install git? ([y]/n) " "git"
+check_install $EXISTS_GIT "Install git?" "git"
 
-check_install $EXISTS_PYTHON "Install python? ([y]/n) " "python3" "python"
+check_install $EXISTS_PYTHON "Install python?" "python3" "python"
 
-check_install $EXISTS_PIP "Install pip? ([y]/n) " "python3-pip" "python-pip"
+check_install $EXISTS_PIP "Install pip?" "python3-pip" "python-pip"
 
-check_install $EXISTS_DOCKER "Install Docker Engine? ([y]/n) " "ca-certificates curl gnupg lsb-release" "docker"
+check_install $EXISTS_DOCKER "Install Docker Engine?" "ca-certificates curl gnupg lsb-release" "docker"
 
-check_install $EXISTS_CRYPT "Install cryptsetup? Needed to mount or create encrypted devices. ([y]/n) " "cryptsetup"
+check_install $EXISTS_CRYPT "Install cryptsetup? Needed to mount or create encrypted devices." "cryptsetup"
 
-check_install $EXISTS_CIFS "Install cifs-utils? Needed to mount SMB network shared directories. ([y]/n) " "cifs-utils"
+check_install $EXISTS_CIFS "Install cifs-utils? Needed to mount SMB network shared directories." "cifs-utils"
 
 if [ $ARCH = "x86" ]; then
-  check_install $EXISTS_EXPRESS_VPN "Install ExpressVPN? ([y]/n) " "wget"
+  check_install $EXISTS_EXPRESS_VPN "Install ExpressVPN?" "wget"
 fi
 
-check_install $EXISTS_UFW "Install ufw (Uncomplicated Firewall)? ([y]/n) " "ufw"
+check_install $EXISTS_UFW "Install ufw (Uncomplicated Firewall)?" "ufw"
 
-check_install $EXISTS_OPEN_SSH "Install openssh? ([y]/n) " "openssh-server" "openssh"
+check_install $EXISTS_OPEN_SSH "Install openssh?" "openssh-server" "openssh"
 
 echo ""
 echo "##########################"

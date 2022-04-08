@@ -63,7 +63,7 @@ command_exists () {
   fi
 }
 
-# Asks for the installation of a module if not installed.
+# Asks for the installation of a module if not installed and writes the result int $RES.
 # The question defaults to "y". Adds module name to $MODULES_TO_INSTALL.
 # Arguments:
 # $1: Exists var
@@ -72,12 +72,14 @@ command_exists () {
 # $4: (Optional) Manjaro package name if different than $3
 check_install () {
   # If the program is not installed
+  RES="n"
   if [ $1 = "n" ]; then
     # Ask for installation
     read -p "$2 ([y]/n) " DO_INSTALL
     # Default to "y"
     DO_INSTALL=${DO_INSTALL:-y}
     if [ $DO_INSTALL = "y" ]; then
+      RES="y"
       # If a fourth argument is given differentiate between distros
       if [ -z $4 ]; then
         MODULES_TO_INSTALL="$MODULES_TO_INSTALL $3"
@@ -118,7 +120,7 @@ check_availabilities () {
   EXISTS_PIP=$(command_exists pip)
   EXISTS_DOCKER=$(command_exists docker)
   EXISTS_CRYPT=$(command_exists cryptsetup)
-  EXISTS_CIFS=$(command_exists cifs-utils)
+  EXISTS_CIFS=$(command_exists mount.cifs)
   EXISTS_EXPRESS_VPN=$(command_exists expressvpn)
   EXISTS_WGET=$(command_exists wget)
   EXISTS_UFW=$(command_exists ufw)
@@ -127,7 +129,7 @@ check_availabilities () {
 
 check_availabilities
 
-if [ $EXISTS_AUTO_UPDATES = "n"]
+if [ $EXISTS_AUTO_UPDATES = "n" ]; then
   read -p "Configure automatic updates at midnight? ([y]/n) " DO_AUTOMATIC_UPDATES
   DO_AUTOMATIC_UPDATES=${DO_AUTOMATIC_UPDATES:-y}
   if [ $DO_AUTOMATIC_UPDATES = "y" ] && [ $EXISTS_CRON = "n" ]; then
@@ -148,6 +150,7 @@ check_install $EXISTS_PYTHON "Install python?" "python3" "python"
 check_install $EXISTS_PIP "Install pip?" "python3-pip" "python-pip"
 
 check_install $EXISTS_DOCKER "Install Docker Engine?" "ca-certificates curl gnupg lsb-release" "docker"
+INSTALL_DOCKER=$RES
 
 check_install $EXISTS_CRYPT "Install cryptsetup? Needed to mount or create encrypted devices." "cryptsetup"
 
@@ -155,6 +158,9 @@ check_install $EXISTS_CIFS "Install cifs-utils? Needed to mount SMB network shar
 
 if [ $ARCH = "x86" ]; then
   check_install $EXISTS_EXPRESS_VPN "Install ExpressVPN?" "wget"
+  INSTALL_EXPRESS_VPN=$RES
+else
+  INSTALL_EXPRESS_VPN="n"
 fi
 
 check_install $EXISTS_UFW "Install ufw (Uncomplicated Firewall)?" "ufw"
@@ -174,7 +180,7 @@ if ! [[ -z $MODULES_TO_INSTALL ]]; then
   fi
 fi
 
-if [ $DO_DOCKER = "y" ]; then
+if [ $INSTALL_DOCKER = "y" ]; then
   if [ $DISTRO = "Ubuntu" ]; then
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
     echo \
@@ -186,16 +192,9 @@ if [ $DO_DOCKER = "y" ]; then
     systemctl start docker.service
     systemctl enable docker.service
   fi
-
-  read -p "Add user to group 'docker'? ([y]/n) " DO_ADD_GROUP
-  DO_ADD_GROUP=${DO_ADD_GROUP:-y}
-  if [ $DO_ADD_GROUP = "y" ]; then
-    read -p "Enter the name of the user? " USERNAME
-    usermod -aG docker $USERNAME
-  fi
 fi
 
-if [ $DO_EXPRESS_VPN = "y" ]; then
+if [ $INSTALL_EXPRESS_VPN = "y" ]; then
   # Clone this repository to get the script that updates ExpressVPN
   if [ ! -d /usr/local/sbin/setup-script ]; then
     git -C /usr/local/sbin clone https://github.com/Lenz-K/setup-script.git
@@ -230,13 +229,13 @@ if [ $DO_AUTOMATIC_UPDATES = "y" ]; then
   fi
   chmod a+x /usr/local/sbin/update-system
   write_crontab_no_duplicate "0 0 * * * root /usr/local/sbin/update-system"
-  if [ $DO_EXPRESS_VPN = "y" ]; then
+  if [ $EXISTS_EXPRESS_VPN = "y" ]; then
     write_crontab_no_duplicate "5 0 * * * root git -C /usr/local/sbin/setup-script pull"
     write_crontab_no_duplicate "6 0 * * * root python /usr/local/sbin/setup-script/update-expressvpn.py ${DISTRO}"
   fi
 fi
 
-read -p "Add additional user? ([y]/n) " DO_CREATE_USER
+read -p "Add an additional user? ([y]/n) " DO_CREATE_USER
 DO_CREATE_USER=${DO_CREATE_USER:-y}
 if [ $DO_CREATE_USER = "y" ]; then
   read -p "Enter the name of the new user: " NEW_USER
@@ -263,6 +262,15 @@ if [ $EXISTS_GIT = "y" ]; then
       su -c "ssh-keygen -t ed25519 -C $EMAIL" $KEY_FOR_USER
       echo "Instructions to add the SSH key to your GitHub profile can be found here: https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account"
     fi
+  fi
+fi
+
+if [ $INSTALL_DOCKER = "y" ]; then
+  read -p "Add user to group 'docker'? ([y]/n) " DO_ADD_GROUP
+  DO_ADD_GROUP=${DO_ADD_GROUP:-y}
+  if [ $DO_ADD_GROUP = "y" ]; then
+    read -p "Enter the name of the user? " USERNAME
+    usermod -aG docker $USERNAME
   fi
 fi
 

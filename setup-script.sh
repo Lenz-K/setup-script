@@ -47,7 +47,7 @@ fi
 
 echo ""
 echo "##########################"
-echo "#       Selections       #"
+echo "#   Install Selections   #"
 echo "##########################"
 
 # String for install command
@@ -285,7 +285,7 @@ if [ $EXISTS_EXPRESS_VPN = "y" ]; then
   fi
 fi
 
-if [ $EXISTS_UFW = "y" ]; then
+if [ $EXISTS_UFW = "y" ] && [[ $(ufw status) == "Status: inactive" ]]; then
   read -p "Enable ufw (Uncomplicated Firewall)? ([y]/n) " ACTIVATE_UFW
   ACTIVATE_UFW=${ACTIVATE_UFW:-y}
   if [ $ACTIVATE_UFW = "y" ]; then

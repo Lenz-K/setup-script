@@ -136,20 +136,6 @@ check_availabilities () {
 
 check_availabilities
 
-if [ $EXISTS_AUTO_UPDATES = "n" ]; then
-  read -p "Configure automatic updates at midnight? ([y]/n) " DO_AUTOMATIC_UPDATES
-  DO_AUTOMATIC_UPDATES=${DO_AUTOMATIC_UPDATES:-y}
-  if [ $DO_AUTOMATIC_UPDATES = "y" ] && [ $EXISTS_CRON = "n" ]; then
-    if [ $DISTRO = "Ubuntu" ]; then
-      MODULES_TO_INSTALL="$MODULES_TO_INSTALL cron"
-    elif [ $DISTRO = "Manjaro" ]; then
-      MODULES_TO_INSTALL="$MODULES_TO_INSTALL cronie"
-    fi
-  fi
-else
-  DO_AUTOMATIC_UPDATES="n"
-fi
-
 check_install $EXISTS_GIT "Install git?" "git"
 
 check_install $EXISTS_PYTHON "Install python?" "python3" "python"
@@ -173,6 +159,20 @@ fi
 check_install $EXISTS_UFW "Install ufw (Uncomplicated Firewall)?" "ufw"
 
 check_install $EXISTS_OPEN_SSH "Install openssh?" "openssh-server" "openssh"
+
+if [ $EXISTS_AUTO_UPDATES = "n" ] || [ $INSTALL_EXPRESS_VPN = "y" ]; then
+  read -p "Configure automatic updates at midnight? ([y]/n) " DO_AUTOMATIC_UPDATES
+  DO_AUTOMATIC_UPDATES=${DO_AUTOMATIC_UPDATES:-y}
+  if [ $DO_AUTOMATIC_UPDATES = "y" ] && [ $EXISTS_CRON = "n" ]; then
+    if [ $DISTRO = "Ubuntu" ]; then
+      MODULES_TO_INSTALL="$MODULES_TO_INSTALL cron"
+    elif [ $DISTRO = "Manjaro" ]; then
+      MODULES_TO_INSTALL="$MODULES_TO_INSTALL cronie"
+    fi
+  fi
+else
+  DO_AUTOMATIC_UPDATES="n"
+fi
 
 echo """
  ___  _  _  ___  _____  ___  _     _

@@ -28,10 +28,14 @@ else
 fi
 
 echo "Detected system: $ARCH architecture - $DISTRO OS"
-echo ""
-echo "##########################"
-echo "#     System Updates     #"
-echo "##########################"
+echo """
+ _   _  ___  ___   ___  _____  ___  ___
+| | | || _ \|   \ /   \|_   _|| __|/ __|
+| |_| ||  _/| |) || - |  | |  | _| \__ \\
+ \___/ |_|  |___/ |_|_|  |_|  |___||___/
+========================================"""
+
+
 if [ $DISTRO = "Ubuntu" ]; then
   apt update
   apt -y upgrade
@@ -45,10 +49,12 @@ if [ $DO_RESTART = "y" ]; then
   reboot
 fi
 
-echo ""
-echo "##########################"
-echo "#   Install Selections   #"
-echo "##########################"
+echo """
+ ___  ___  _     ___   ___  _____  ___   ___   _  _  ___
+/ __|| __|| |   | __| / __||_   _||_ _| / _ \ | \| |/ __|
+\__ \| _| | |__ | _| | (__   | |   | | | (_) || .  |\__ \\
+|___/|___||____||___| \___|  |_|  |___| \___/ |_|\_||___/
+========================================================="""
 
 # String for install command
 MODULES_TO_INSTALL=""
@@ -95,9 +101,11 @@ check_install () {
 }
 
 check_availabilities () {
+  EXISTS_EXPRESS_VPN=$(command_exists expressvpn)
+
   if [ -f /etc/cron.d/update-system-crontab ] && \
      [[ $(cat /etc/cron.d/update-system-crontab) == *"0 0 * * * root /usr/local/sbin/update-system"* ]] && \
-     [[ $(cat /etc/cron.d/update-system-crontab) == *"6 0 * * * root python /usr/local/sbin/setup-script/update-expressvpn.py ${DISTRO}"* ]]; then
+     [[ $(cat /etc/cron.d/update-system-crontab) == *"6 0 * * * root python /usr/local/sbin/setup-script/update-expressvpn.py ${DISTRO}"* || $EXISTS_EXPRESS_VPN == "n" ]]; then
     EXISTS_AUTO_UPDATES="y"
   else
     EXISTS_AUTO_UPDATES="n"
@@ -111,7 +119,7 @@ check_availabilities () {
     EXISTS_PYTHON3=$(command_exists python3)
     if [ $EXISTS_PYTHON3 = "y" ] && [ $EXISTS_PYTHON = "n" ]; then
       ln --symbolic --force python3 /usr/bin/python
-      $EXISTS_PYTHON = "y"
+      EXISTS_PYTHON="y"
     fi
   elif [ $DISTRO = "Manjaro" ]; then
     EXISTS_PYTHON=$(command_exists python)
@@ -121,7 +129,6 @@ check_availabilities () {
   EXISTS_DOCKER=$(command_exists docker)
   EXISTS_CRYPT=$(command_exists cryptsetup)
   EXISTS_CIFS=$(command_exists mount.cifs)
-  EXISTS_EXPRESS_VPN=$(command_exists expressvpn)
   EXISTS_WGET=$(command_exists wget)
   EXISTS_UFW=$(command_exists ufw)
   EXISTS_OPEN_SSH=$(command_exists sshd)
@@ -167,10 +174,13 @@ check_install $EXISTS_UFW "Install ufw (Uncomplicated Firewall)?" "ufw"
 
 check_install $EXISTS_OPEN_SSH "Install openssh?" "openssh-server" "openssh"
 
-echo ""
-echo "##########################"
-echo "# Package Installations  #"
-echo "##########################"
+echo """
+ ___  _  _  ___  _____  ___  _     _
+|_ _|| \| |/ __||_   _|/   \| |   | |
+ | | | .  |\__ \  | |  | - || |__ | |__
+|___||_|\_||___/  |_|  |_|_||____||____|
+========================================"""
+
 if ! [[ -z $MODULES_TO_INSTALL ]]; then
   echo "Installing the following modules: $MODULES_TO_INSTALL"
   if [ $DISTRO = "Ubuntu" ]; then
@@ -206,10 +216,12 @@ if [ $INSTALL_EXPRESS_VPN = "y" ]; then
   fi
 fi
 
-echo ""
-echo "##########################"
-echo "#     Configurations     #"
-echo "##########################"
+echo """
+  ___   ___   _  _  ___  ___   ___  _   _  ___  ___  _____  ___   ___   _  _  ___
+ / __| / _ \ | \| || __||_ _| / __|| | | || _ \/   \|_   _||_ _| / _ \ | \| |/ __|
+| (__ | (_) || .  || _|  | | | (_ || |_| ||   /| - |  | |   | | | (_) || .  |\__ \\
+ \___| \___/ |_|\_||_|  |___| \___| \___/ |_|_\|_|_|  |_|  |___| \___/ |_|\_||___/
+=================================================================================="""
 
 check_availabilities
 
@@ -235,6 +247,7 @@ if [ $DO_AUTOMATIC_UPDATES = "y" ]; then
   fi
 fi
 
+echo ""
 read -p "Add an additional user? ([y]/n) " DO_CREATE_USER
 DO_CREATE_USER=${DO_CREATE_USER:-y}
 if [ $DO_CREATE_USER = "y" ]; then
@@ -244,6 +257,7 @@ if [ $DO_CREATE_USER = "y" ]; then
 fi
 
 if [ $EXISTS_GIT = "y" ]; then
+  echo ""
   read -p "Do first time setup for git? ([y]/n) " DO_GIT
   DO_GIT=${DO_GIT:-y}
   if [ $DO_GIT = "y" ]; then
@@ -260,12 +274,14 @@ if [ $EXISTS_GIT = "y" ]; then
       KEY_FOR_USER=${KEY_FOR_USER:-root}
       echo "Generating SSH key..."
       su -c "ssh-keygen -t ed25519 -C $EMAIL" $KEY_FOR_USER
-      echo "Instructions to add the SSH key to your GitHub profile can be found here: https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account"
+      echo """Instructions to add the SSH key to your GitHub profile can be found here:
+https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account"""
     fi
   fi
 fi
 
 if [ $INSTALL_DOCKER = "y" ]; then
+  echo ""
   read -p "Add user to group 'docker'? ([y]/n) " DO_ADD_GROUP
   DO_ADD_GROUP=${DO_ADD_GROUP:-y}
   if [ $DO_ADD_GROUP = "y" ]; then
@@ -275,6 +291,7 @@ if [ $INSTALL_DOCKER = "y" ]; then
 fi
 
 if [ $EXISTS_EXPRESS_VPN = "y" ]; then
+  echo ""
   read -p "Do ExpressVPN setup? ([y]/n) " DO_EXPRESS_VPN
   DO_EXPRESS_VPN=${DO_EXPRESS_VPN:-y}
   if [ $DO_EXPRESS_VPN = "y" ]; then
@@ -286,6 +303,7 @@ if [ $EXISTS_EXPRESS_VPN = "y" ]; then
 fi
 
 if [ $EXISTS_UFW = "y" ] && [[ $(ufw status) == "Status: inactive" ]]; then
+  echo ""
   read -p "Enable ufw (Uncomplicated Firewall)? ([y]/n) " ACTIVATE_UFW
   ACTIVATE_UFW=${ACTIVATE_UFW:-y}
   if [ $ACTIVATE_UFW = "y" ]; then
@@ -301,11 +319,12 @@ if [ $EXISTS_UFW = "y" ] && [[ $(ufw status) == "Status: inactive" ]]; then
   fi
 fi
 
-if [ $EXISTS_OPEN_SSH = "y" ] && [[ $(cat /etc/ssh/sshd_config) != *"PasswordAuthentication yes"* ]] && [[ $(cat /etc/ssh/sshd_config) != *"#PasswordAuthentication no"* ]]; then
+if [ $EXISTS_OPEN_SSH = "y" ] && \
+   [[ $(cat /etc/ssh/sshd_config) == *"PasswordAuthentication yes"* || $(cat /etc/ssh/sshd_config) == *"#PasswordAuthentication no"* ]]; then
   echo ""
   echo "Enforce SSH key authentication?"
-  echo "That means you must have already copied your SSH key to this machine."
-  echo "If not run 'ssh-copy-id username@this_machine' on your machine."
+  echo "That means if you are connected to this machine via SSH you must have already copied your SSH key to this machine."
+  echo "If not run 'ssh-copy-id username@this_machine' on your local machine."
   read -p "Enforce SSH key authentication? ([y]/n) " DO_SSH_AUTH
   DO_SSH_AUTH=${DO_SSH_AUTH:-y}
 

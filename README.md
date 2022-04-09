@@ -46,9 +46,9 @@ _Note: ExpressVPN is only supported on x86 systems._
 ### 3. Configurations
 The script then asks to configure the following features
 (The script dynamically determines which features make sense on a system):
-- automatic updates
-- add a user
+- Automatic Updates
+- Add a User
 - git
 - ExpressVPN
 - ufw (Uncomplicated Firewall)
-- OpenSSH
+- Enforce SSH Key Authentication

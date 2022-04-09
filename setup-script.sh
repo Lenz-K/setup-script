@@ -28,10 +28,14 @@ else
 fi
 
 echo "Detected system: $ARCH architecture - $DISTRO OS"
-echo ""
-echo "##########################"
-echo "#     System Updates     #"
-echo "##########################"
+echo """
+ _   _  ___  ___   ___  _____  ___  ___
+| | | || _ \|   \ /   \|_   _|| __|/ __|
+| |_| ||  _/| |) || - |  | |  | _| \__ \\
+ \___/ |_|  |___/ |_|_|  |_|  |___||___/
+========================================"""
+
+
 if [ $DISTRO = "Ubuntu" ]; then
   apt update
   apt -y upgrade
@@ -45,98 +49,138 @@ if [ $DO_RESTART = "y" ]; then
   reboot
 fi
 
-echo ""
-echo "##########################"
-echo "#       Selections       #"
-echo "##########################"
+echo """
+ ___  ___  _     ___   ___  _____  ___   ___   _  _  ___
+/ __|| __|| |   | __| / __||_   _||_ _| / _ \ | \| |/ __|
+\__ \| _| | |__ | _| | (__   | |   | | | (_) || .  |\__ \\
+|___/|___||____||___| \___|  |_|  |___| \___/ |_|\_||___/
+========================================================="""
 
 # String for install command
 MODULES_TO_INSTALL=""
 
-read -p "Configure automatic updates at midnight? ([y]/n) " DO_AUTOMATIC_UPDATES
-DO_AUTOMATIC_UPDATES=${DO_AUTOMATIC_UPDATES:-y}
-if [ $DO_AUTOMATIC_UPDATES = "y" ] && [ $DISTRO = "Manjaro" ]; then
-  MODULES_TO_INSTALL="$MODULES_TO_INSTALL cronie"
-fi
-
-read -p "Install and setup git? Required for ExpressVPN. Not necessary if already installed. ([y]/n) " DO_GIT
-DO_GIT=${DO_GIT:-y}
-if [ $DO_GIT = "y" ]; then
-  MODULES_TO_INSTALL="$MODULES_TO_INSTALL git"
-fi
-
-read -p "Install python? Required for ExpressVPN. Not necessary if already installed. ([y]/n) " DO_PY
-DO_PY=${DO_PY:-y}
-if [ $DO_PY = "y" ]; then
-  if [ $DISTRO = "Ubuntu" ]; then
-    MODULES_TO_INSTALL="$MODULES_TO_INSTALL python3"
-  elif [ $DISTRO = "Manjaro" ]; then
-    MODULES_TO_INSTALL="$MODULES_TO_INSTALL python"
+# Provide a command as first argument to check its existence.
+# Echoes 'y' if available, 'n' if not available.
+command_exists () {
+  if command -v $1 &> /dev/null; then
+    echo "y"
+  else
+    echo "n"
   fi
-fi
+}
 
-read -p "Install pip? ([y]/n) " DO_PIP
-DO_PIP=${DO_PIP:-y}
-if [ $DO_PIP = "y" ]; then
-  if [ $DISTRO = "Ubuntu" ]; then
-    MODULES_TO_INSTALL="$MODULES_TO_INSTALL python3-pip"
-  elif [ $DISTRO = "Manjaro" ]; then
-    MODULES_TO_INSTALL="$MODULES_TO_INSTALL python-pip"
+# Asks for the installation of a module if not installed and writes the result int $RES.
+# The question defaults to "y". Adds module name to $MODULES_TO_INSTALL.
+# Arguments:
+# $1: Exists var
+# $2: Question
+# $3: Ubuntu package name
+# $4: (Optional) Manjaro package name if different than $3
+check_install () {
+  # If the program is not installed
+  RES="n"
+  if [ $1 = "n" ]; then
+    # Ask for installation
+    read -p "$2 ([y]/n) " DO_INSTALL
+    # Default to "y"
+    DO_INSTALL=${DO_INSTALL:-y}
+    if [ $DO_INSTALL = "y" ]; then
+      RES="y"
+      # If a fourth argument is given differentiate between distros
+      if [ -z $4 ]; then
+        MODULES_TO_INSTALL="$MODULES_TO_INSTALL $3"
+      else
+        if [ $DISTRO = "Ubuntu" ]; then
+          MODULES_TO_INSTALL="$MODULES_TO_INSTALL $3"
+        elif [ $DISTRO = "Manjaro" ]; then
+          MODULES_TO_INSTALL="$MODULES_TO_INSTALL $4"
+        fi
+      fi
+    fi
   fi
-fi
+}
 
-read -p "Install Docker Engine? ([y]/n) " DO_DOCKER
-DO_DOCKER=${DO_DOCKER:-y}
-if [ $DO_DOCKER = "y" ]; then
-  if [ $DISTRO = "Ubuntu" ]; then
-    MODULES_TO_INSTALL="$MODULES_TO_INSTALL ca-certificates curl gnupg lsb-release"
-  elif [ $DISTRO = "Manjaro" ]; then
-    MODULES_TO_INSTALL="$MODULES_TO_INSTALL docker"
+check_availabilities () {
+  EXISTS_EXPRESS_VPN=$(command_exists expressvpn)
+
+  if [ -f /etc/cron.d/update-system-crontab ] && \
+     [[ $(cat /etc/cron.d/update-system-crontab) == *"0 0 * * * root /usr/local/sbin/update-system"* ]] && \
+     [[ $(cat /etc/cron.d/update-system-crontab) == *"6 0 * * * root python /usr/local/sbin/setup-script/update-expressvpn.py ${DISTRO}"* || $EXISTS_EXPRESS_VPN == "n" ]]; then
+    EXISTS_AUTO_UPDATES="y"
+  else
+    EXISTS_AUTO_UPDATES="n"
   fi
-fi
 
-read -p "Install cryptsetup? Needed to mount or create encrypted devices. ([y]/n) " DO_CRYPT
-DO_CRYPT=${DO_CRYPT:-y}
-if [ $DO_CRYPT = "y" ]; then
-  MODULES_TO_INSTALL="$MODULES_TO_INSTALL cryptsetup"
-fi
+  EXISTS_CRON=$(command_exists crontab)
+  EXISTS_GIT=$(command_exists git)
 
-read -p "Install cifs-utils? Needed to mount SMB network shared directories. ([y]/n) " DO_CIFS
-DO_CIFS=${DO_CIFS:-y}
-if [ $DO_CIFS = "y" ]; then
-  MODULES_TO_INSTALL="$MODULES_TO_INSTALL cifs-utils"
-fi
+  if [ $DISTRO = "Ubuntu" ]; then
+    EXISTS_PYTHON=$(command_exists python)
+    EXISTS_PYTHON3=$(command_exists python3)
+    if [ $EXISTS_PYTHON3 = "y" ] && [ $EXISTS_PYTHON = "n" ]; then
+      ln --symbolic --force python3 /usr/bin/python
+      EXISTS_PYTHON="y"
+    fi
+  elif [ $DISTRO = "Manjaro" ]; then
+    EXISTS_PYTHON=$(command_exists python)
+  fi
+
+  EXISTS_PIP=$(command_exists pip)
+  EXISTS_DOCKER=$(command_exists docker)
+  EXISTS_CRYPT=$(command_exists cryptsetup)
+  EXISTS_CIFS=$(command_exists mount.cifs)
+  EXISTS_WGET=$(command_exists wget)
+  EXISTS_UFW=$(command_exists ufw)
+  EXISTS_OPEN_SSH=$(command_exists sshd)
+}
+
+check_availabilities
+
+check_install $EXISTS_GIT "Install git?" "git"
+
+check_install $EXISTS_PYTHON "Install python?" "python3" "python"
+
+check_install $EXISTS_PIP "Install pip?" "python3-pip" "python-pip"
+
+check_install $EXISTS_DOCKER "Install Docker Engine?" "ca-certificates curl gnupg lsb-release" "docker"
+INSTALL_DOCKER=$RES
+
+check_install $EXISTS_CRYPT "Install cryptsetup? Needed to mount or create encrypted devices." "cryptsetup"
+
+check_install $EXISTS_CIFS "Install cifs-utils? Needed to mount SMB network shared directories." "cifs-utils"
 
 if [ $ARCH = "x86" ]; then
-  read -p "Install and setup ExpressVPN? ([y]/n) " DO_EXPRESS_VPN
-  DO_EXPRESS_VPN=${DO_EXPRESS_VPN:-y}
-  if [ $DO_EXPRESS_VPN = "y" ]; then
-    MODULES_TO_INSTALL="$MODULES_TO_INSTALL wget"
+  check_install $EXISTS_EXPRESS_VPN "Install ExpressVPN?" "wget"
+  INSTALL_EXPRESS_VPN=$RES
+else
+  INSTALL_EXPRESS_VPN="n"
+fi
+
+check_install $EXISTS_UFW "Install ufw (Uncomplicated Firewall)?" "ufw"
+
+check_install $EXISTS_OPEN_SSH "Install openssh?" "openssh-server" "openssh"
+
+if [ $EXISTS_AUTO_UPDATES = "n" ] || [ $INSTALL_EXPRESS_VPN = "y" ]; then
+  read -p "Configure automatic updates at midnight? ([y]/n) " DO_AUTOMATIC_UPDATES
+  DO_AUTOMATIC_UPDATES=${DO_AUTOMATIC_UPDATES:-y}
+  if [ $DO_AUTOMATIC_UPDATES = "y" ] && [ $EXISTS_CRON = "n" ]; then
+    if [ $DISTRO = "Ubuntu" ]; then
+      MODULES_TO_INSTALL="$MODULES_TO_INSTALL cron"
+    elif [ $DISTRO = "Manjaro" ]; then
+      MODULES_TO_INSTALL="$MODULES_TO_INSTALL cronie"
+    fi
   fi
 else
-  DO_EXPRESS_VPN="n"
+  DO_AUTOMATIC_UPDATES="n"
 fi
 
-read -p "Install and setup ufw (Uncomplicated Firewall)? ([y]/n) " DO_UFW
-DO_UFW=${DO_UFW:-y}
-if [ $DO_UFW = "y" ]; then
-  MODULES_TO_INSTALL="$MODULES_TO_INSTALL ufw"
-fi
+echo """
+ ___  _  _  ___  _____  ___  _     _
+|_ _|| \| |/ __||_   _|/   \| |   | |
+ | | | .  |\__ \  | |  | - || |__ | |__
+|___||_|\_||___/  |_|  |_|_||____||____|
+========================================"""
 
-read -p "Install and configure openssh? ([y]/n) " DO_SSH
-DO_SSH=${DO_SSH:-y}
-if [ $DO_SSH = "y" ]; then
-  if [ $DISTRO = "Ubuntu" ]; then
-    MODULES_TO_INSTALL="$MODULES_TO_INSTALL openssh-server"
-  elif [ $DISTRO = "Manjaro" ]; then
-    MODULES_TO_INSTALL="$MODULES_TO_INSTALL openssh"
-  fi
-fi
-
-echo ""
-echo "##########################"
-echo "# Package Installations  #"
-echo "##########################"
 if ! [[ -z $MODULES_TO_INSTALL ]]; then
   echo "Installing the following modules: $MODULES_TO_INSTALL"
   if [ $DISTRO = "Ubuntu" ]; then
@@ -146,11 +190,7 @@ if ! [[ -z $MODULES_TO_INSTALL ]]; then
   fi
 fi
 
-if [ $DO_PY = "y" ] && [ $DISTRO = "Ubuntu" ]; then
-  ln --symbolic --force python3 /usr/bin/python
-fi
-
-if [ $DO_DOCKER = "y" ]; then
+if [ $INSTALL_DOCKER = "y" ]; then
   if [ $DISTRO = "Ubuntu" ]; then
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
     echo \
@@ -162,16 +202,9 @@ if [ $DO_DOCKER = "y" ]; then
     systemctl start docker.service
     systemctl enable docker.service
   fi
-
-  read -p "Add user to group 'docker'? ([y]/n) " DO_ADD_GROUP
-  DO_ADD_GROUP=${DO_ADD_GROUP:-y}
-  if [ $DO_ADD_GROUP = "y" ]; then
-    read -p "Enter the name of the user? " USERNAME
-    usermod -aG docker $USERNAME
-  fi
 fi
 
-if [ $DO_EXPRESS_VPN = "y" ]; then
+if [ $INSTALL_EXPRESS_VPN = "y" ]; then
   # Clone this repository to get the script that updates ExpressVPN
   if [ ! -d /usr/local/sbin/setup-script ]; then
     git -C /usr/local/sbin clone https://github.com/Lenz-K/setup-script.git
@@ -183,10 +216,23 @@ if [ $DO_EXPRESS_VPN = "y" ]; then
   fi
 fi
 
-echo ""
-echo "##########################"
-echo "#     Configurations     #"
-echo "##########################"
+echo """
+  ___   ___   _  _  ___  ___   ___  _   _  ___  ___  _____  ___   ___   _  _  ___
+ / __| / _ \ | \| || __||_ _| / __|| | | || _ \/   \|_   _||_ _| / _ \ | \| |/ __|
+| (__ | (_) || .  || _|  | | | (_ || |_| ||   /| - |  | |   | | | (_) || .  |\__ \\
+ \___| \___/ |_|\_||_|  |___| \___| \___/ |_|_\|_|_|  |_|  |___| \___/ |_|\_||___/
+=================================================================================="""
+
+check_availabilities
+
+# Write text to /etc/cron.d/update-system-crontab after checking that the text does not yet exist
+# Arguments: $1: Text to write
+write_crontab_no_duplicate () {
+  if [ ! -f /etc/cron.d/update-system-crontab ] || [[ $(cat /etc/cron.d/update-system-crontab) != *"$1"* ]]; then
+    echo "$1" >> /etc/cron.d/update-system-crontab
+  fi
+}
+
 if [ $DO_AUTOMATIC_UPDATES = "y" ]; then
   if [ $DISTRO = "Ubuntu" ] && [ ! -f /usr/local/sbin/update-system ]; then
     echo -e "#!/bin/bash\napt update\napt -y upgrade" >> /usr/local/sbin/update-system
@@ -194,18 +240,15 @@ if [ $DO_AUTOMATIC_UPDATES = "y" ]; then
     echo -e "#!/bin/bash\npacman -Syu --noconfirm" >> /usr/local/sbin/update-system
   fi
   chmod a+x /usr/local/sbin/update-system
-  if [ ! -f /etc/cron.d/update-system-crontab ] || [[ $(cat /etc/cron.d/update-system-crontab) != *"0 0 * * * root /usr/local/sbin/update-system"* ]]; then
-    echo "0 0 * * * root /usr/local/sbin/update-system" >> /etc/cron.d/update-system-crontab
-  fi
-  if [ $DO_EXPRESS_VPN = "y" ]; then
-    if [ ! -f /etc/cron.d/update-system-crontab ] || [[ $(cat /etc/cron.d/update-system-crontab) != *"5 0 * * * root python /usr/local/sbin/setup-script/update-expressvpn.py"* ]]; then
-      echo "5 0 * * * root git -C /usr/local/sbin/setup-script pull" >> /etc/cron.d/update-system-crontab
-      echo "6 0 * * * root python /usr/local/sbin/setup-script/update-expressvpn.py ${DISTRO}" >> /etc/cron.d/update-system-crontab
-    fi
+  write_crontab_no_duplicate "0 0 * * * root /usr/local/sbin/update-system"
+  if [ $EXISTS_EXPRESS_VPN = "y" ]; then
+    write_crontab_no_duplicate "5 0 * * * root git -C /usr/local/sbin/setup-script pull"
+    write_crontab_no_duplicate "6 0 * * * root python /usr/local/sbin/setup-script/update-expressvpn.py ${DISTRO}"
   fi
 fi
 
-read -p "Add additional user? ([y]/n) " DO_CREATE_USER
+echo ""
+read -p "Add an additional user? ([y]/n) " DO_CREATE_USER
 DO_CREATE_USER=${DO_CREATE_USER:-y}
 if [ $DO_CREATE_USER = "y" ]; then
   read -p "Enter the name of the new user: " NEW_USER
@@ -213,32 +256,54 @@ if [ $DO_CREATE_USER = "y" ]; then
   passwd $NEW_USER
 fi
 
-if [ $DO_GIT = "y" ]; then
-  read -p "Please enter your name for git: " NAME
-  git config --global user.name "$NAME"
+if [ $EXISTS_GIT = "y" ]; then
+  echo ""
+  read -p "Do first time setup for git? ([y]/n) " DO_GIT
+  DO_GIT=${DO_GIT:-y}
+  if [ $DO_GIT = "y" ]; then
+    read -p "Please enter your name for git: " NAME
+    git config --global user.name "$NAME"
 
-  read -p "Please enter your E-Mail for git: " EMAIL
-  git config --global user.email $EMAIL
+    read -p "Please enter your E-Mail for git: " EMAIL
+    git config --global user.email $EMAIL
 
-  read -p "Generate SSH key? ([y]/n) " DO_GENERATE_KEY
-  DO_GENERATE_KEY=${DO_GENERATE_KEY:-y}
-  if [ $DO_GENERATE_KEY = "y" ]; then
-    read -p "For which user shall the SSH key be generated? [root] " KEY_FOR_USER
-    KEY_FOR_USER=${KEY_FOR_USER:-root}
-    echo "Generating SSH key..."
-    su -c "ssh-keygen -t ed25519 -C $EMAIL" $KEY_FOR_USER
-    echo "Instructions to add the SSH key to your GitHub profile can be found here: https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account"
+    read -p "Generate SSH key? ([y]/n) " DO_GENERATE_KEY
+    DO_GENERATE_KEY=${DO_GENERATE_KEY:-y}
+    if [ $DO_GENERATE_KEY = "y" ]; then
+      read -p "For which user shall the SSH key be generated? [root] " KEY_FOR_USER
+      KEY_FOR_USER=${KEY_FOR_USER:-root}
+      echo "Generating SSH key..."
+      su -c "ssh-keygen -t ed25519 -C $EMAIL" $KEY_FOR_USER
+      echo """Instructions to add the SSH key to your GitHub profile can be found here:
+https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account"""
+    fi
   fi
 fi
 
-if [ $DO_EXPRESS_VPN = "y" ]; then
-  expressvpn activate
-  expressvpn autoconnect true
-  expressvpn preferences set block_trackers true
-  expressvpn connect
+if [ $INSTALL_DOCKER = "y" ]; then
+  echo ""
+  read -p "Add user to group 'docker'? ([y]/n) " DO_ADD_GROUP
+  DO_ADD_GROUP=${DO_ADD_GROUP:-y}
+  if [ $DO_ADD_GROUP = "y" ]; then
+    read -p "Enter the name of the user? " USERNAME
+    usermod -aG docker $USERNAME
+  fi
 fi
 
-if [ $DO_UFW = "y" ]; then
+if [ $EXISTS_EXPRESS_VPN = "y" ]; then
+  echo ""
+  read -p "Do ExpressVPN setup? ([y]/n) " DO_EXPRESS_VPN
+  DO_EXPRESS_VPN=${DO_EXPRESS_VPN:-y}
+  if [ $DO_EXPRESS_VPN = "y" ]; then
+    expressvpn activate
+    expressvpn autoconnect true
+    expressvpn preferences set block_trackers true
+    expressvpn connect
+  fi
+fi
+
+if [ $EXISTS_UFW = "y" ] && [[ $(ufw status) == "Status: inactive" ]]; then
+  echo ""
   read -p "Enable ufw (Uncomplicated Firewall)? ([y]/n) " ACTIVATE_UFW
   ACTIVATE_UFW=${ACTIVATE_UFW:-y}
   if [ $ACTIVATE_UFW = "y" ]; then
@@ -254,15 +319,17 @@ if [ $DO_UFW = "y" ]; then
   fi
 fi
 
-if [ $DO_SSH = "y" ]; then
+if [ $EXISTS_OPEN_SSH = "y" ] && \
+   [[ $(cat /etc/ssh/sshd_config) == *"PasswordAuthentication yes"* || $(cat /etc/ssh/sshd_config) == *"#PasswordAuthentication no"* ]]; then
   echo ""
   echo "Enforce SSH key authentication?"
-  echo "That means you must have already copied your SSH key to this machine."
-  echo "If not run 'ssh-copy-id username@this_machine' on your machine."
+  echo "That means if you are connected to this machine via SSH you must have already copied your SSH key to this machine."
+  echo "If not run 'ssh-copy-id username@this_machine' on your local machine."
   read -p "Enforce SSH key authentication? ([y]/n) " DO_SSH_AUTH
   DO_SSH_AUTH=${DO_SSH_AUTH:-y}
 
   if [ $DO_SSH_AUTH = "y" ]; then
+    sed -i "s/#PasswordAuthentication no/PasswordAuthentication no/" /etc/ssh/sshd_config
     sed -i "s/#PasswordAuthentication yes/PasswordAuthentication no/" /etc/ssh/sshd_config
     sed -i "s/PasswordAuthentication yes/PasswordAuthentication no/" /etc/ssh/sshd_config
     systemctl restart sshd.service

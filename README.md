@@ -26,11 +26,13 @@ wget https://raw.githubusercontent.com/Lenz-K/setup-script/main/setup-script.sh 
 ```
 
 # Features
-The interactive script will update the system and will then ask to install and configure the following software modules and features:
-
-- automatic updates
+The interactive script has three stages.
+### 1. System Update
+### 2. Install Selected Modules
+The script asks to install the following software modules if not available:
 - git
-- python and pip
+- python
+- pip
 - Docker Engine
 - cryptsetup  
 _Note: Needed to mount or create encrypted devices._
@@ -40,3 +42,13 @@ _Note: Needed to mount SMB network shared directories._
 _Note: ExpressVPN is only supported on x86 systems._
 - ufw (Uncomplicated Firewall)
 - OpenSSH
+
+### 3. Configurations
+The script then asks to configure the following features
+(The script dynamically determines which features make sense on a system):
+- Automatic Updates
+- Add a User
+- git
+- ExpressVPN
+- ufw (Uncomplicated Firewall)
+- Enforce SSH Key Authentication

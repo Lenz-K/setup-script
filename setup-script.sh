@@ -130,6 +130,7 @@ check_availabilities () {
   EXISTS_CRYPT=$(command_exists cryptsetup)
   EXISTS_CIFS=$(command_exists mount.cifs)
   EXISTS_WGET=$(command_exists wget)
+  EXISTS_TIMEDATECTL=$(command_exists timedatectl)
   EXISTS_UFW=$(command_exists ufw)
   EXISTS_OPEN_SSH=$(command_exists sshd)
 }
@@ -299,6 +300,15 @@ if [ $EXISTS_EXPRESS_VPN = "y" ]; then
     expressvpn autoconnect true
     expressvpn preferences set block_trackers true
     expressvpn connect
+  fi
+fi
+
+if [ $EXISTS_TIMEDATECTL = "y" ]; then
+  echo ""
+  read -p "Set timezone to UTC? ([y]/n) " DO_SET_UTC
+  DO_SET_UTC=${DO_SET_UTC:-y}
+  if [ $DO_SET_UTC = "y" ]; then
+    timedatectl set-timezone UTC
   fi
 fi
 

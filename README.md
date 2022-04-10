@@ -50,5 +50,6 @@ The script then asks to configure the following features
 - Add a User
 - git
 - ExpressVPN
+- Set Timezone to UTC
 - ufw (Uncomplicated Firewall)
 - Enforce SSH Key Authentication

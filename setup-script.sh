@@ -268,6 +268,15 @@ if [ $DO_CREATE_USER = "y" ]; then
   read -p "Enter the name of the new user: " NEW_USER
   useradd --create-home $NEW_USER -s /bin/bash
   passwd $NEW_USER
+  read -p "Add user ${NEW_USER} to sudoers? ([y]/n) " DO_SUDO
+  DO_SUDO=${DO_SUDO:-y}
+  if [ $DO_SUDO = "y" ]; then
+    if [ $DISTRO = "Ubuntu" ]; then
+      usermod -aG sudo $NEW_USER
+    elif [ $DISTRO = "Manjaro" ]; then
+      usermod -aG wheel $NEW_USER
+    fi
+  fi
 fi
 
 if [ $EXISTS_GIT = "y" ]; then

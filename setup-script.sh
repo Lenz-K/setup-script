@@ -150,6 +150,8 @@ INSTALL_DOCKER=$RES
 if [ $EXISTS_DOCKER = "y" ] || [ $INSTALL_DOCKER = "y"]; then
   check_install $EXISTS_DOCKER_COMPOSE "Install docker-compose?" "curl" "docker-compose"
   INSTALL_DOCKER_COMPOSE=$RES
+else
+  INSTALL_DOCKER_COMPOSE="n"
 fi
 
 check_install $EXISTS_CRYPT "Install cryptsetup? Needed to mount or create encrypted devices." "cryptsetup"

@@ -127,6 +127,7 @@ check_availabilities () {
 
   EXISTS_PIP=$(command_exists pip)
   EXISTS_DOCKER=$(command_exists docker)
+  EXISTS_DOCKER_COMPOSE=$(command_exists docker-compose)
   EXISTS_CRYPT=$(command_exists cryptsetup)
   EXISTS_CIFS=$(command_exists mount.cifs)
   EXISTS_WGET=$(command_exists wget)
@@ -145,6 +146,11 @@ check_install $EXISTS_PIP "Install pip?" "python3-pip" "python-pip"
 
 check_install $EXISTS_DOCKER "Install Docker Engine?" "ca-certificates curl gnupg lsb-release" "docker"
 INSTALL_DOCKER=$RES
+
+if [ $EXISTS_DOCKER = "y" || $INSTALL_DOCKER = "y"]; then
+  check_install $EXISTS_DOCKER_COMPOSE "Install docker-compose?" "curl" "docker-compose"
+  INSTALL_DOCKER_COMPOSE=$RES
+fi
 
 check_install $EXISTS_CRYPT "Install cryptsetup? Needed to mount or create encrypted devices." "cryptsetup"
 
@@ -203,6 +209,11 @@ if [ $INSTALL_DOCKER = "y" ]; then
     systemctl start docker.service
     systemctl enable docker.service
   fi
+fi
+
+if [ $INSTALL_DOCKER_COMPOSE = "y" ] && [ $DISTRO = "Ubuntu" ]; then
+  curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+  chmod +x /usr/local/bin/docker-compose
 fi
 
 if [ $INSTALL_EXPRESS_VPN = "y" ]; then

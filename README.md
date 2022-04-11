@@ -34,6 +34,7 @@ The script asks to install the following software modules if not available:
 - python
 - pip
 - Docker Engine
+- docker-compose
 - cryptsetup  
 _Note: Needed to mount or create encrypted devices._
 - cifs-utils  

@@ -147,7 +147,7 @@ check_install $EXISTS_PIP "Install pip?" "python3-pip" "python-pip"
 check_install $EXISTS_DOCKER "Install Docker Engine?" "ca-certificates curl gnupg lsb-release" "docker"
 INSTALL_DOCKER=$RES
 
-if [ $EXISTS_DOCKER = "y" || $INSTALL_DOCKER = "y"]; then
+if [ $EXISTS_DOCKER = "y" ] || [ $INSTALL_DOCKER = "y"]; then
   check_install $EXISTS_DOCKER_COMPOSE "Install docker-compose?" "curl" "docker-compose"
   INSTALL_DOCKER_COMPOSE=$RES
 fi

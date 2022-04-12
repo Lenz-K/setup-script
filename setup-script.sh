@@ -43,6 +43,7 @@ elif [ $DISTRO = "Manjaro" ]; then
   pacman -Syu --noconfirm
 fi
 
+echo ""
 read -p "Restart now? Recommended if a lot of updates were installed. ([y]/n) " DO_RESTART
 DO_RESTART=${DO_RESTART:-y}
 if [ $DO_RESTART = "y" ]; then
@@ -143,6 +144,17 @@ check_install $EXISTS_GIT "Install git?" "git"
 check_install $EXISTS_PYTHON "Install python?" "python3" "python"
 
 check_install $EXISTS_PIP "Install pip?" "python3-pip" "python-pip"
+
+if [ $DISTRO = "Ubuntu" ]; then
+  dpkg -s python3.9-venv &> /dev/null
+  if [ $? -ne 0 ]; then
+    read -p "Install python module for virtual environments (venv)? ([y]/n) " INSTALL_VENV
+    INSTALL_VENV=${INSTALL_VENV:-y}
+    if [ $INSTALL_VENV = "y" ]; then
+      MODULES_TO_INSTALL="$MODULES_TO_INSTALL python3.9-venv"
+    fi
+  fi
+fi
 
 check_install $EXISTS_DOCKER "Install Docker Engine?" "ca-certificates curl gnupg lsb-release" "docker"
 INSTALL_DOCKER=$RES
@@ -309,7 +321,7 @@ fi
 
 if [ $INSTALL_DOCKER = "y" ]; then
   echo ""
-  read -p "Add user to group 'docker'? ([y]/n) " DO_ADD_GROUP
+  read -p "Add a user to group 'docker'? ([y]/n) " DO_ADD_GROUP
   DO_ADD_GROUP=${DO_ADD_GROUP:-y}
   if [ $DO_ADD_GROUP = "y" ]; then
     read -p "Enter the name of the user? " USERNAME

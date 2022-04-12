@@ -300,7 +300,7 @@ if [ $EXISTS_GIT = "y" ]; then
     DO_GENERATE_KEY=${DO_GENERATE_KEY:-y}
     if [ $DO_GENERATE_KEY = "y" ]; then
       echo "Generating SSH key..."
-      su -c "ssh-keygen -t ed25519 -C $EMAIL" $KEY_FOR_USER
+      su -c "ssh-keygen -t ed25519 -C $EMAIL" $USER_NAME
       echo """Instructions to add the SSH key to your GitHub profile can be found here:
 https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account"""
     fi

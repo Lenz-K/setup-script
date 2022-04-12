@@ -147,7 +147,7 @@ check_install $EXISTS_PIP "Install pip?" "python3-pip" "python-pip"
 check_install $EXISTS_DOCKER "Install Docker Engine?" "ca-certificates curl gnupg lsb-release" "docker"
 INSTALL_DOCKER=$RES
 
-if [ $EXISTS_DOCKER = "y" ] || [ $INSTALL_DOCKER = "y"]; then
+if [ $EXISTS_DOCKER = "y" ] || [ $INSTALL_DOCKER = "y" ]; then
   check_install $EXISTS_DOCKER_COMPOSE "Install docker-compose?" "curl" "docker-compose"
   INSTALL_DOCKER_COMPOSE=$RES
 else
@@ -287,17 +287,18 @@ if [ $EXISTS_GIT = "y" ]; then
   read -p "Do first time setup for git? ([y]/n) " DO_GIT
   DO_GIT=${DO_GIT:-y}
   if [ $DO_GIT = "y" ]; then
+    read -p "For which user shall git be set up? [root] " USER_NAME
+    USER_NAME=${USER_NAME:-root}
+
     read -p "Please enter your name for git: " NAME
-    git config --global user.name "$NAME"
+    su -c "git config --global user.name \"${NAME}\"" $USER_NAME
 
     read -p "Please enter your E-Mail for git: " EMAIL
-    git config --global user.email $EMAIL
+    su -c "git config --global user.email \"${EMAIL}\"" $USER_NAME
 
     read -p "Generate SSH key? ([y]/n) " DO_GENERATE_KEY
     DO_GENERATE_KEY=${DO_GENERATE_KEY:-y}
     if [ $DO_GENERATE_KEY = "y" ]; then
-      read -p "For which user shall the SSH key be generated? [root] " KEY_FOR_USER
-      KEY_FOR_USER=${KEY_FOR_USER:-root}
       echo "Generating SSH key..."
       su -c "ssh-keygen -t ed25519 -C $EMAIL" $KEY_FOR_USER
       echo """Instructions to add the SSH key to your GitHub profile can be found here:

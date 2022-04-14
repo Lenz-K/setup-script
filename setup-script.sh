@@ -1,5 +1,10 @@
 #!/bin/bash
 
+#
+# An interactive script to easily install basic software modules and configure a freshly installed Linux.
+# Find the readme and repository at: https://github.com/Lenz-K/setup-script
+#
+
 if [ $EUID -ne 0 ]; then
   echo "Please run as root"
   exit 0

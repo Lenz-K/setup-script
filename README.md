@@ -33,6 +33,7 @@ The script asks to install the following software modules if not available:
 - git
 - python
 - pip
+- python3.9-venv
 - Docker Engine
 - docker-compose
 - cryptsetup  

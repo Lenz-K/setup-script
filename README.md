@@ -1,7 +1,7 @@
 # About
 This repository consists of an interactive script to easily install basic software modules and configure a freshly installed Linux. So far it supports Ubuntu and Manjaro Linux. It is tested on x86 and arm64.
 
-# Instructions
+# Usage
 To use the script do not clone the repository because the script is also intended to do the first time setup of git.
 Instead, download the script with wget:
 ```shell
@@ -40,6 +40,7 @@ The script asks to install the following software modules if not available:
 _Note: Needed to mount or create encrypted devices._
 - cifs-utils  
 _Note: Needed to mount SMB network shared directories._
+- OpenVPN
 - ExpressVPN  
 _Note: ExpressVPN is only supported on x86 systems._
 - ufw (Uncomplicated Firewall)
@@ -50,8 +51,8 @@ The script then asks to configure the following features
 (The script dynamically determines which features make sense on a system):
 - Automatic Updates
 - Add a User
-- git
+- git (Username, E-Mail and optionally generate an SSH Key)
 - ExpressVPN
 - Set Timezone to UTC
-- ufw (Uncomplicated Firewall)
+- ufw (enable, add rules for SSH or OpenVPN)
 - Enforce SSH Key Authentication

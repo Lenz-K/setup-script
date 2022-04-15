@@ -136,6 +136,7 @@ check_availabilities () {
   EXISTS_DOCKER_COMPOSE=$(command_exists docker-compose)
   EXISTS_CRYPT=$(command_exists cryptsetup)
   EXISTS_CIFS=$(command_exists mount.cifs)
+  EXISTS_OPEN_VPN=$(command_exists openvpn)
   EXISTS_WGET=$(command_exists wget)
   EXISTS_TIMEDATECTL=$(command_exists timedatectl)
   EXISTS_UFW=$(command_exists ufw)
@@ -174,6 +175,8 @@ fi
 check_install $EXISTS_CRYPT "Install cryptsetup? Needed to mount or create encrypted devices." "cryptsetup"
 
 check_install $EXISTS_CIFS "Install cifs-utils? Needed to mount SMB network shared directories." "cifs-utils"
+
+check_install $EXISTS_OPEN_VPN "Install OpenVPN?" "openvpn"
 
 if [ $ARCH = "x86" ]; then
   check_install $EXISTS_EXPRESS_VPN "Install ExpressVPN?" "wget"
@@ -365,6 +368,7 @@ if [ $EXISTS_UFW = "y" ] && [[ $(ufw status) == "Status: inactive" ]]; then
     if [ $ALLOW_SSH = "y" ]; then
       ufw allow ssh
     fi
+
     if [ $DISTRO = "Manjaro" ]; then
       systemctl enable ufw
     fi

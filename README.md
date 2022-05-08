@@ -33,7 +33,8 @@ The script asks to install the following software modules if not available:
 - git
 - python
 - pip
-- python3.9-venv
+- python3.9-venv  
+_Note: Needed for virtual python environments._
 - Docker Engine
 - docker-compose
 - cryptsetup  
@@ -54,5 +55,5 @@ The script then asks to configure the following features
 - git (Username, E-Mail and optionally generate an SSH Key)
 - ExpressVPN
 - Set Timezone to UTC
-- ufw (enable, add rules for SSH or OpenVPN)
+- ufw (enable, add rule for SSH)
 - Enforce SSH Key Authentication

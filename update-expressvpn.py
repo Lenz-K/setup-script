@@ -41,7 +41,6 @@ def retrieve_latest_version():
 
     regex = re.compile(r'https://www.expressvpn.works/clients/linux/expressvpn_\d+.\d+.\d+.\d+-1_amd64.deb.asc')
 
-    text = ''
     with open('latest', 'rt') as file:
         text = '\n'.join(file.readlines())
 
@@ -141,6 +140,8 @@ def main(argv):
 
     if version == NOT_INSTALLED or version_greater_than(latest_version, version):
         exit_code = install_expressvpn(latest_version, distro)
+        if version != NOT_INSTALLED:
+            os.system('expressvpn connect')
 
     return exit_code
 

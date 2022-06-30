@@ -332,7 +332,7 @@ if [ $INSTALL_DOCKER = "y" ]; then
   read -p "Add a user to group 'docker'? ([y]/n) " DO_ADD_GROUP
   DO_ADD_GROUP=${DO_ADD_GROUP:-y}
   if [ $DO_ADD_GROUP = "y" ]; then
-    read -p "Enter the name of the user? " USERNAME
+    read -p "Enter the name of the user: " USERNAME
     usermod -aG docker $USERNAME
   fi
 fi

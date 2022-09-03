@@ -233,8 +233,10 @@ if [ $INSTALL_DOCKER = "y" ]; then
 fi
 
 if [ $INSTALL_DOCKER_COMPOSE = "y" ] && [ $DISTRO = "Ubuntu" ]; then
-  curl -SL "https://github.com/docker/compose/releases/download/2.10.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-  chmod +x /usr/local/bin/docker-compose
+  INSTALL_PATH=/usr/local/lib/docker/cli-plugins
+  mkdir -p $INSTALL_PATH
+  curl -SL "https://github.com/docker/compose/releases/download/v2.10.2/docker-compose-$(uname -s)-$(uname -m)" -o $INSTALL_PATH/docker-compose
+  chmod +x $INSTALL_PATH/docker-compose
 fi
 
 if [ $INSTALL_EXPRESS_VPN = "y" ]; then

@@ -51,7 +51,7 @@ fi
 echo ""
 read -p "Restart now? Recommended if a lot of updates were installed. ([y]/n) " DO_RESTART
 DO_RESTART=${DO_RESTART:-y}
-if [ $DO_RESTART = "y" ]; then
+if [ "$DO_RESTART" = "y" ]; then
   reboot
 fi
 
@@ -68,7 +68,7 @@ MODULES_TO_INSTALL=""
 # Provide a command as first argument to check its existence.
 # Echoes 'y' if available, 'n' if not available.
 command_exists () {
-  if command -v $1 &> /dev/null; then
+  if command -v "$1" &> /dev/null; then
     echo "y"
   else
     echo "n"
@@ -85,15 +85,15 @@ command_exists () {
 check_install () {
   # If the program is not installed
   RES="n"
-  if [ $1 = "n" ]; then
+  if [ "$1" = "n" ]; then
     # Ask for installation
     read -p "$2 ([y]/n) " DO_INSTALL
     # Default to "y"
     DO_INSTALL=${DO_INSTALL:-y}
-    if [ $DO_INSTALL = "y" ]; then
+    if [ "$DO_INSTALL" = "y" ]; then
       RES="y"
       # If a fourth argument is given differentiate between distros
-      if [ -z $4 ]; then
+      if [ -z "$4" ]; then
         MODULES_TO_INSTALL="$MODULES_TO_INSTALL $3"
       else
         if [ $DISTRO = "Ubuntu" ]; then
@@ -137,7 +137,6 @@ check_availabilities () {
   EXISTS_CRYPT=$(command_exists cryptsetup)
   EXISTS_CIFS=$(command_exists mount.cifs)
   EXISTS_OPEN_VPN=$(command_exists openvpn)
-  EXISTS_WGET=$(command_exists wget)
   EXISTS_TIMEDATECTL=$(command_exists timedatectl)
   EXISTS_UFW=$(command_exists ufw)
   EXISTS_OPEN_SSH=$(command_exists sshd)
@@ -152,12 +151,12 @@ check_install $EXISTS_PYTHON "Install python?" "python3" "python"
 check_install $EXISTS_PIP "Install pip?" "python3-pip" "python-pip"
 
 if [ $DISTRO = "Ubuntu" ]; then
-  dpkg -s python3.9-venv &> /dev/null
+  dpkg -s python3.10-venv &> /dev/null
   if [ $? -ne 0 ]; then
     read -p "Install python module for virtual environments (venv)? ([y]/n) " INSTALL_VENV
     INSTALL_VENV=${INSTALL_VENV:-y}
     if [ $INSTALL_VENV = "y" ]; then
-      MODULES_TO_INSTALL="$MODULES_TO_INSTALL python3.9-venv"
+      MODULES_TO_INSTALL="$MODULES_TO_INSTALL python3.10-venv"
     fi
   fi
 fi
@@ -210,7 +209,7 @@ echo """
 |___||_|\_||___/  |_|  |_|_||____||____|
 ========================================"""
 
-if ! [[ -z $MODULES_TO_INSTALL ]]; then
+if [[ -n $MODULES_TO_INSTALL ]]; then
   echo "Installing the following modules: $MODULES_TO_INSTALL"
   if [ $DISTRO = "Ubuntu" ]; then
     apt -y install $MODULES_TO_INSTALL
@@ -236,7 +235,7 @@ fi
 if [ $INSTALL_DOCKER_COMPOSE = "y" ] && [ $DISTRO = "Ubuntu" ]; then
   INSTALL_PATH=/usr/local/lib/docker
   mkdir -p $INSTALL_PATH/cli-plugins
-  curl -SL https://github.com/docker/compose/releases/download/v2.2.3/docker-compose-$(uname -s)-$(uname -m) -o $INSTALL_PATH/cli-plugins/docker-compose
+  curl -SL "https://github.com/docker/compose/releases/download/v2.2.3/docker-compose-$(uname -s)-$(uname -m) -o $INSTALL_PATH/cli-plugins/docker-compose"
   chmod +x $INSTALL_PATH/cli-plugins/docker-compose
   ln --symbolic --force $INSTALL_PATH/cli-plugins/docker-compose /usr/bin/docker-compose
 fi
@@ -289,15 +288,15 @@ read -p "Add an additional user? ([y]/n) " DO_CREATE_USER
 DO_CREATE_USER=${DO_CREATE_USER:-y}
 if [ $DO_CREATE_USER = "y" ]; then
   read -p "Enter the name of the new user: " NEW_USER
-  useradd --create-home $NEW_USER -s /bin/bash
-  passwd $NEW_USER
+  useradd --create-home "$NEW_USER" -s /bin/bash
+  passwd "$NEW_USER"
   read -p "Add user ${NEW_USER} to sudoers? ([y]/n) " DO_SUDO
   DO_SUDO=${DO_SUDO:-y}
   if [ $DO_SUDO = "y" ]; then
     if [ $DISTRO = "Ubuntu" ]; then
-      usermod -aG sudo $NEW_USER
+      usermod -aG sudo "$NEW_USER"
     elif [ $DISTRO = "Manjaro" ]; then
-      usermod -aG wheel $NEW_USER
+      usermod -aG wheel "$NEW_USER"
     fi
   fi
 fi
@@ -311,16 +310,16 @@ if [ $EXISTS_GIT = "y" ]; then
     USER_NAME=${USER_NAME:-root}
 
     read -p "Please enter your name for git: " NAME
-    su -c "git config --global user.name \"${NAME}\"" $USER_NAME
+    su -c "git config --global user.name \"${NAME}\"" "$USER_NAME"
 
     read -p "Please enter your E-Mail for git: " EMAIL
-    su -c "git config --global user.email \"${EMAIL}\"" $USER_NAME
+    su -c "git config --global user.email \"${EMAIL}\"" "$USER_NAME"
 
     read -p "Generate SSH key? ([y]/n) " DO_GENERATE_KEY
     DO_GENERATE_KEY=${DO_GENERATE_KEY:-y}
     if [ $DO_GENERATE_KEY = "y" ]; then
       echo "Generating SSH key..."
-      su -c "ssh-keygen -t ed25519 -C $EMAIL" $USER_NAME
+      su -c "ssh-keygen -t ed25519 -C $EMAIL" "$USER_NAME"
       echo """Instructions to add the SSH key to your GitHub profile can be found here:
 https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account"""
     fi
@@ -333,7 +332,7 @@ if [ $INSTALL_DOCKER = "y" ]; then
   DO_ADD_GROUP=${DO_ADD_GROUP:-y}
   if [ $DO_ADD_GROUP = "y" ]; then
     read -p "Enter the name of the user: " USERNAME
-    usermod -aG docker $USERNAME
+    usermod -aG docker "$USERNAME"
   fi
 fi
 

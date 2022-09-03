@@ -7,7 +7,7 @@ Instead, download the script with wget:
 ```shell
 wget https://raw.githubusercontent.com/Lenz-K/setup-script/main/setup-script.sh
 ```
-_Or copy the [content](https://github.com/Lenz-K/setup-script/blob/main/setup-script.sh)
+_Or copy the [content](setup-script.sh)
 into a file called `setup-script.sh` if wget is not available._
 
 Then make it executable:

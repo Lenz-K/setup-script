@@ -235,7 +235,7 @@ fi
 if [ $INSTALL_DOCKER_COMPOSE = "y" ] && [ $DISTRO = "Ubuntu" ]; then
   INSTALL_PATH=/usr/local/lib/docker
   mkdir -p $INSTALL_PATH/cli-plugins
-  curl -SL "https://github.com/docker/compose/releases/download/v2.2.3/docker-compose-$(uname -s)-$(uname -m) -o $INSTALL_PATH/cli-plugins/docker-compose"
+  curl -SL "https://github.com/docker/compose/releases/download/v2.10.2/docker-compose-$(uname -s)-$(uname -m)" -o $INSTALL_PATH/cli-plugins/docker-compose
   chmod +x $INSTALL_PATH/cli-plugins/docker-compose
   ln --symbolic --force $INSTALL_PATH/cli-plugins/docker-compose /usr/bin/docker-compose
 fi

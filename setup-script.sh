@@ -151,12 +151,12 @@ check_install $EXISTS_PYTHON "Install python?" "python3" "python"
 check_install $EXISTS_PIP "Install pip?" "python3-pip" "python-pip"
 
 if [ $DISTRO = "Ubuntu" ]; then
-  dpkg -s python3.10-venv &> /dev/null
+  dpkg -s python3-venv &> /dev/null
   if [ $? -ne 0 ]; then
     read -p "Install python module for virtual environments (venv)? ([y]/n) " INSTALL_VENV
     INSTALL_VENV=${INSTALL_VENV:-y}
     if [ $INSTALL_VENV = "y" ]; then
-      MODULES_TO_INSTALL="$MODULES_TO_INSTALL python3.10-venv"
+      MODULES_TO_INSTALL="$MODULES_TO_INSTALL python3-venv"
     fi
   fi
 fi
